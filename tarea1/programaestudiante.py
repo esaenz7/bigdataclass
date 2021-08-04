@@ -31,21 +31,21 @@ spark = SparkSession.builder\
 
 files = sys.argv
 
-dfCiclista = spark.read.csv(files[0], schema=StructType(\
+dfCiclista = spark.read.csv(files[1], schema=StructType(\
                                [StructField('cedula', IntegerType()),
                                 StructField('nombre', StringType()),
                                 StructField('provincia', StringType()),]))
 print('dfCiclista')
 dfCiclista.show()
 dfCiclista.printSchema()
-dfRuta = spark.read.csv(files[1], schema=StructType(\
+dfRuta = spark.read.csv(files[2], schema=StructType(\
                                [StructField('codigo_ruta', IntegerType()),
                                 StructField('nombre_ruta', StringType()),
                                 StructField('kms', FloatType()),]))
 print('dfRuta')
 dfRuta.show()
 dfRuta.printSchema()
-dfActividad = spark.read.csv(files[2], schema=StructType(\
+dfActividad = spark.read.csv(files[3], schema=StructType(\
                                [StructField('codigo_ruta', IntegerType()),
                                 StructField('cedula', IntegerType()),
                                 StructField('fecha', DateType()),]))
