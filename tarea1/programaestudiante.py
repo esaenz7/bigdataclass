@@ -29,7 +29,7 @@ spark = SparkSession.builder\
         .config('spark.ui.port', '4050')\
         .getOrCreate()
 
-spark.sparkContext.setLogLevel("FATAL")
+spark.sparkContext.setLogLevel("OFF")
 files = sys.argv
 
 dfCiclista = spark.read.csv(files[1], schema=StructType(\
