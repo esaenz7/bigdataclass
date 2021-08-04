@@ -31,7 +31,6 @@ spark = SparkSession.builder\
 
 files = sys.argv[1:]
 
-#@title Code ex2 { vertical-output: true, form-width: "50%", display-mode: "both" }
 dfCiclista = spark.read.csv(files[1], schema=StructType(\
                                [StructField('cedula', IntegerType()),
                                 StructField('nombre', StringType()),
@@ -67,11 +66,8 @@ dfResultados3 = dfResultados2.groupBy('provincia','nombre').agg(F.sum('kms'),F.m
 dfResultados3.show()
 
 w_provincia = Window.partitionBy('provincia').orderBy(F.col('sum(kms)').desc())
-dfResultadosTop = dfResultados.withColumn('row',F.row_number().over(w_provincia))\
+dfResultadosTop = dfResultados3.withColumn('row',F.row_number().over(w_provincia))\
 .filter(F.col('row')<=5).drop('row')\
 .orderBy('provincia')
 dfResultadosTop.show(35)
 
-# spark.sql("select Name, Department, Salary from "+
-#      " (select *, row_number() OVER (PARTITION BY department ORDER BY salary DESC) as rn " +
-#      " FROM EMP) tmp where rn <= 2").show()
