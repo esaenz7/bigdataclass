@@ -29,29 +29,32 @@ spark = SparkSession.builder\
         .config('spark.ui.port', '4050')\
         .getOrCreate()
 
-files = sys.argv[1:]
+files = sys.argv
 
-dfCiclista = spark.read.csv(files[1], schema=StructType(\
+dfCiclista = spark.read.csv(files[0], schema=StructType(\
                                [StructField('cedula', IntegerType()),
                                 StructField('nombre', StringType()),
                                 StructField('provincia', StringType()),]))
 print('dfCiclista')
 dfCiclista.show()
 dfCiclista.printSchema()
-dfRuta = spark.read.csv(files[2], schema=StructType(\
+dfRuta = spark.read.csv(files[1], schema=StructType(\
                                [StructField('codigo_ruta', IntegerType()),
                                 StructField('nombre_ruta', StringType()),
                                 StructField('kms', FloatType()),]))
 print('dfRuta')
 dfRuta.show()
 dfRuta.printSchema()
-dfActividad = spark.read.csv(files[3], schema=StructType(\
+dfActividad = spark.read.csv(files[2], schema=StructType(\
                                [StructField('codigo_ruta', IntegerType()),
                                 StructField('cedula', IntegerType()),
                                 StructField('fecha', DateType()),]))
 print('dfActividad')
 dfActividad.show()
 dfActividad.printSchema()
+
+top = 5
+colcount1 = dfCiclista.select(F.countDistinct('provincia')).collect()[0][0]
 
 dfResultados1 = dfActividad.join(dfRuta, dfActividad.codigo_ruta == dfRuta.codigo_ruta)\
 .join(dfCiclista, dfActividad.cedula == dfCiclista.cedula)
@@ -67,7 +70,7 @@ dfResultados3.show()
 
 w_provincia = Window.partitionBy('provincia').orderBy(F.col('sum(kms)').desc())
 dfResultadosTop = dfResultados3.withColumn('row',F.row_number().over(w_provincia))\
-.filter(F.col('row')<=5).drop('row')\
+.filter(F.col('row')<=top).drop('row')\
 .orderBy('provincia')
-dfResultadosTop.show(35)
+dfResultadosTop.show(top*colcount1)
 
