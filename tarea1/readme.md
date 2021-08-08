@@ -13,7 +13,7 @@
         #spark-submit programaestudiante.py ciclista.csv ruta.csv actividad.csv
     3- Para ejecutar las pruebas del programa se debe aplicar el siguiente comando:
         #python -m pytest -v
-    4- Para ejecutar todas las instrucciones de forma automática, ejecute el archivo run.sh.
+    4- Para ejecutar las instrucciones 2 y 3 de forma automática, ejecute el archivo run.sh.
 
 Nota1: El código fuente en cada archivo cuenta con comentarios detallados que explican la lógica del programa.
 Nota2: Se inluye un jupyter notebook de Google Colab con todo el código necesario, como complemento.
