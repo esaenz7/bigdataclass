@@ -126,3 +126,4 @@ def almacenar_datos(data=[], nombre='default.csv', show=20, print_=True):
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
+#

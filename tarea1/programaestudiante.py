@@ -15,3 +15,4 @@ stage2 = unir_datos(stage1, select=['fecha','nombre','provincia','nombre_ruta','
 stage3 = agregar_datos(stage2, group=['provincia','nombre'], agg='kms')
 stage4 = presentar_datos(stage3, top=5, part='provincia', order='sum(kms)', show=50)
 stage5 = almacenar_datos(stage4, nombre='resultados.csv', show=50)
+#

@@ -71,9 +71,16 @@ def tmissnumdata():
 @pytest.fixture
 def tmisscatdata():
   dfmisscatdata = cargar_datos(['','ciclista.csv','ruta.csv','actividad.csv'])
-  dfmisscatdata[0] = dfmisscatdata[0].withColumn('provincia', F.when(dfmisscatdata[0]['provincia'] == 'Alajuela', '').otherwise(dfmisscatdata[0]['provincia'])) #se sustituyen algunos valores categóricos por nulos (valores de columna provincia se reemplazan por valor nulo)
+  dfmisscatdata[0] = dfmisscatdata[0].withColumn('provincia', F.when(dfmisscatdata[0]['provincia'] == 'Alajuela', '').otherwise(dfmisscatdata[0]['provincia'])) #se sustituyen algunos valores categóricos por nulos (valores de columna provincia = Alajuela se reemplazan por valor nulo)
   rmisscatdata = presentar_datos(agregar_datos(unir_datos(dfmisscatdata, select=['fecha','nombre','provincia','nombre_ruta','kms']), group=['provincia','nombre'], agg='kms'), top=5, part='provincia', order='sum(kms)')
   return rmisscatdata
+#parámetro para prueba completa con valores eliminados
+@pytest.fixture
+def tdeldata():
+  dfdeldata = cargar_datos(['','ciclista.csv','ruta.csv','actividad.csv'])
+  dfdeldata[0] = dfdeldata[0].filter('provincia Not Like "Heredia"') #se eliminan algunos valores filtrando la columna (se eliminan todos los ciclistas con provincia = Heredia)
+  rdeldata = presentar_datos(agregar_datos(unir_datos(dfdeldata, select=['fecha','nombre','provincia','nombre_ruta','kms']), group=['provincia','nombre'], agg='kms'), top=5, part='provincia', order='sum(kms)')
+  return rdeldata
 
 #***resultados esperados*** para pruebas de comparación
 #
@@ -245,3 +252,41 @@ def tmisscatdata_expected():
                       StructField('avg(kms)',DoubleType()),])
   result = spark.createDataFrame(data, schema)
   return result
+#parámetro para prueba completa con valores eliminados
+@pytest.fixture
+def tdeldata_expected():
+  data = [('San José', 'FERNANDEZ ANDUJAR Ruben', 605.96, 43.28),
+          ('San José', 'ALAPHILIPPE Julian', 348.77, 49.82),
+          ('San José', 'ROJAS José Joaquin', 337.85, 37.54),
+          ('San José', 'KÄMNA Lennard', 259.72, 51.94),
+          ('San José', 'MOSCON Gianni', 253.49, 50.7),
+          ('Puntarenas', 'BETANCUR GOMEZ Carlos Alberto', 460.15, 38.35),
+          ('Puntarenas', 'HAIG Jack', 222.92, 55.73),
+          ('Puntarenas', 'BUCHMANN Emanuel', 185.87, 37.17),
+          ('Alajuela', 'WALLAYS Jelle', 517.33, 47.03),
+          ('Alajuela', 'CHAVES RUBIO Johan Esteban', 413.35, 41.34),
+          ('Alajuela', 'POLJANSKI Pawel', 355.0, 32.27),
+          ('Alajuela', 'BARGUIL WARREN', 235.91, 39.32),
+          ('Alajuela', 'ROCHE Nicolas', 207.31, 41.46),
+          ('Limón', 'NIBALI Vincenzo', 239.48, 39.91),
+          ('Limón', 'KONRAD Patrick', 205.88, 51.47),
+          ('Limón', 'DE CLERCQ Bart', 204.79, 40.96),
+          ('Limón', 'FROOME Christopher', 89.22, 44.61),
+          ('Limón', 'MAJKA Rafal', 71.43, 35.72),
+          ('Cartago', 'POELS Wout', 403.7, 40.37),
+          ('Cartago', 'OSS Daniel', 379.12, 47.39),
+          ('Cartago', 'BENEDETTI Cesare', 247.72, 41.29),
+          ('Cartago', 'LAMPAERT Yves', 246.85, 41.14),
+          ('Cartago', 'HAGA Chad', 163.24, 40.81),
+          ('Guanacaste', 'YATES Simon', 440.34, 44.03),
+          ('Guanacaste', 'KNEES Christian', 440.15, 48.91),
+          ('Guanacaste', 'STANNARD Ian', 315.28, 45.04),
+          ('Guanacaste', 'DENNIS Rohan', 241.37, 48.27)]
+  schema = StructType(\
+                      [StructField('provincia',StringType()),
+                      StructField('nombre',StringType()),
+                      StructField('sum(kms)',DoubleType()),
+                      StructField('avg(kms)',DoubleType()),])
+  result = spark.createDataFrame(data, schema)
+  return result
+#

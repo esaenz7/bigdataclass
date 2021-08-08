@@ -96,3 +96,14 @@ def test_misscatdata(tmisscatdata, tmisscatdata_expected):
   assert tmisscatdata[0].select('provincia').distinct().count() == 7
   assert tmisscatdata_expected.exceptAll(tmisscatdata[0]).count() == 0
   assert tmisscatdata[0].exceptAll(tmisscatdata_expected).count() == 0
+#prueba completa con valores eliminados
+def test_deldata(tdeldata, tdeldata_expected):
+  tdeldata[0].show()
+  tdeldata_expected.show()
+  assert type(tdeldata) == list
+  assert len(tdeldata) == 1
+  assert tdeldata[0].count() == 27
+  assert tdeldata[0].select('provincia').distinct().count() == 6
+  assert tdeldata_expected.exceptAll(tdeldata[0]).count() == 0
+  assert tdeldata[0].exceptAll(tdeldata_expected).count() == 0
+#
