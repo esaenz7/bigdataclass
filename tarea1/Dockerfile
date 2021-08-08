@@ -9,6 +9,7 @@ RUN apk add bash && \
   pip3 install --upgrade pip && \
   pip3 install pyspark && \
   pip3 install pytest && \
+  pip3 install pytest-sugar && \
   ln /usr/bin/python3.7 /usr/bin/python
 
 WORKDIR /src
