@@ -18,4 +18,6 @@
 * Nota 1: El código fuente en cada archivo cuenta con comentarios detallados que explican la lógica del programa.
 * Nota 2: Se inluye un jupyter notebook de Google Colab con todo el código necesario, como complemento.
 
+(https://github.com/esaenz7/bigdataclass/tree/main/tarea1)
+
 ---
