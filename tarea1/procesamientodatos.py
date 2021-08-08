@@ -14,7 +14,7 @@ Métodos:
 #librerías necesarias
 import sys, os, datetime
 from pyspark.sql import SparkSession, functions as F, window as W
-from pyspark.sql.types import (DateType, IntegerType, FloatType, StringType, StructField, StructType, TimestampType)
+from pyspark.sql.types import (DateType, IntegerType, FloatType, DoubleType, StringType, StructField, StructType, TimestampType)
 
 #sesión de spark
 spark = SparkSession.builder\
@@ -25,7 +25,7 @@ spark = SparkSession.builder\
 spark.sparkContext.setLogLevel("ERROR")
 
 #función para carga de datos (lista con archivos csv)
-def cargar_datos(files=[], show=20, print_=False):
+def cargar_datos(files=[], show=20, print_=True):
   try:
     #lectura de archivos a partir de la definición de esquemas
     df1 = spark.read.csv(files[1], schema=StructType(\
@@ -57,7 +57,7 @@ def cargar_datos(files=[], show=20, print_=False):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función para unión de datos de los dataframes (data=lista de dataframes) y selección de las columnas requeridas (select=lista de columnas)
-def unir_datos(data=[], select=[], show=20, print_=False):
+def unir_datos(data=[], select=[], show=20, print_=True):
   try:
     #unión de los dataframes a partir de las columnas relacionadas
     dfResultados1 = data[2].join(data[1], data[1].codigo_ruta == data[2].codigo_ruta)\
@@ -74,7 +74,7 @@ def unir_datos(data=[], select=[], show=20, print_=False):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función para agrupar y agregar los datos (data=dataframe) a partir de las columnas especificadas (group=columnas a agrupar, agg=columna de agregación)
-def agregar_datos(data=[], group=[], agg='', show=20, print_=False):
+def agregar_datos(data=[], group=[], agg='', show=20, print_=True):
   try:
     #agrupación y agregación de los datos (totales y promedios)
     dfResultados3 = data[1].groupBy(group).agg(F.sum(agg),F.mean(agg))\
@@ -89,7 +89,7 @@ def agregar_datos(data=[], group=[], agg='', show=20, print_=False):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función para presentar los datos (data=dataframe) particionados (part=columna) y ordenados (order=columna) con un límite (top=cantidad de filas)
-def presentar_datos(data=[], top=5, part='', order='', show=20, print_=False):
+def presentar_datos(data=[], top=5, part='', order='', show=20, print_=True):
   try:
     #definición de operación de partición y ordenamiento
     window = W.Window.partitionBy(part).orderBy(F.col(part).desc(), F.col(order).desc())
@@ -100,8 +100,9 @@ def presentar_datos(data=[], top=5, part='', order='', show=20, print_=False):
     if print_:
       print('\nDataFrame: Top 5 total de kms y promedio de kms diario, por provincia.')
       dfResultados4.show(show)
-      print('\nDataFrame: esquema y explicación de ejecución de spark.')
+      print('\nEsquema del dataframe.')
       dfResultados4.printSchema()
+      print('\nExplicación de ejecución de spark.')
       dfResultados4.explain()
     return [dfResultados4]
   except Exception as e:
@@ -109,7 +110,7 @@ def presentar_datos(data=[], top=5, part='', order='', show=20, print_=False):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función para guardar los datos (data=dataframe) con nombre (nombre=nombre del archivo)
-def almacenar_datos(data=[], nombre='default.csv', show=20, print_=False):
+def almacenar_datos(data=[], nombre='default.csv', show=20, print_=True):
   try:
     #escritura de archivo
     data[0].write.csv(nombre, mode='overwrite')
@@ -117,8 +118,9 @@ def almacenar_datos(data=[], nombre='default.csv', show=20, print_=False):
     dfResultados5 = spark.read.csv(nombre, schema=data[0].schema)
     #impresión de resultados
     if print_:
-      print('\nDataFrame: almacenado como '+nombre+' y descripción de los datos por provincia.')
+      print('\nDataFrame: obtenido del archivo '+nombre+'.')
       dfResultados5.show(show)
+      print('\nDataFrame: descripción de los datos por provincia.')
       dfResultados5.groupby(dfResultados5[0]).agg(F.count(dfResultados5[2]).alias('count'),F.min(dfResultados5[2]).alias('min'),F.max(dfResultados5[2]).alias('max'),F.round(F.mean(dfResultados5[2]),2).alias('avg')).show()
     return [dfResultados5]
   except Exception as e:
