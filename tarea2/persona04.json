@@ -1,0 +1,65 @@
+{"identificador": "01004",
+    "viajes": 
+  [
+    {
+      "codigo_postal_origen": "40801",
+      "codigo_postal_destino": "11101",
+      "kilometros": "1.24",
+      "precio_kilometro": "300"
+    },
+    {
+      "codigo_postal_origen": "40701",
+      "codigo_postal_destino": "40701",
+      "kilometros": "23.86",
+      "precio_kilometro": "550"
+    },
+    {
+      "codigo_postal_origen": "10201",
+      "codigo_postal_destino": "40101",
+      "kilometros": "8.59",
+      "precio_kilometro": "400"
+    },
+    {
+      "codigo_postal_origen": "40701",
+      "codigo_postal_destino": "10801",
+      "kilometros": "24.45",
+      "precio_kilometro": "600"
+    },
+    {
+      "codigo_postal_origen": "20101",
+      "codigo_postal_destino": "40401",
+      "kilometros": "8.79",
+      "precio_kilometro": "300"
+    },
+    {
+      "codigo_postal_origen": "40301",
+      "codigo_postal_destino": "11101",
+      "kilometros": "6.41",
+      "precio_kilometro": "350"
+    },
+    {
+      "codigo_postal_origen": "30101",
+      "codigo_postal_destino": "11301",
+      "kilometros": "27.2",
+      "precio_kilometro": "300"
+    },
+    {
+      "codigo_postal_origen": "20101",
+      "codigo_postal_destino": "10301",
+      "kilometros": "1.71",
+      "precio_kilometro": "550"
+    },
+    {
+      "codigo_postal_origen": "20101",
+      "codigo_postal_destino": "40401",
+      "kilometros": "14.01",
+      "precio_kilometro": "400"
+    },
+    {
+      "codigo_postal_origen": "20101",
+      "codigo_postal_destino": "40501",
+      "kilometros": "15.4",
+      "precio_kilometro": "550"
+    }
+  ]
+}

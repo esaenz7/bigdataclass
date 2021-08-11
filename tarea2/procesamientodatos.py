@@ -4,17 +4,15 @@ Nombre de archivo:
 Descripción: 
   +Librería con funciones para el procesamiento de los datos
 Métodos:
-  +cargar_datos
-  +unir_datos
-  +agregar_datos
-  +presentar_datos
-  +almacenar_datos
+  |--+cargar_datos
+  |--+generar_tablas
+  |--+almacenar_tablas
 '''
 
 #librerías necesarias
 import sys, os, datetime
 from pyspark.sql import SparkSession, functions as F, window as W
-from pyspark.sql.types import (DateType, IntegerType, FloatType, DoubleType, StringType, StructField, StructType, TimestampType)
+from pyspark.sql.types import (DateType, IntegerType, FloatType, DoubleType, LongType, StringType, StructField, StructType, TimestampType)
 
 #sesión de spark
 spark = SparkSession.builder\
@@ -24,105 +22,68 @@ spark = SparkSession.builder\
         .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 
-#función para carga de datos (lista con archivos csv)
-def cargar_datos(files=[], show=20, print_=True):
+#función para carga de datos (lista de archivos .json)
+def cargar_datos(files=[]):
   try:
-    #lectura de archivos a partir de la definición de esquemas
-    df1 = spark.read.csv(files[1], schema=StructType(\
-                                  [StructField('cedula', IntegerType()),
-                                  StructField('nombre', StringType()),
-                                  StructField('provincia', StringType()),]))
-    df2 = spark.read.csv(files[2], schema=StructType(\
-                                  [StructField('codigo_ruta', IntegerType()),
-                                  StructField('nombre_ruta', StringType()),
-                                  StructField('kms', FloatType()),]))
-    df3 = spark.read.csv(files[3], schema=StructType(\
-                                  [StructField('codigo_ruta', IntegerType()),
-                                  StructField('cedula', IntegerType()),
-                                  StructField('fecha', DateType()),]))
-    #impresión de resultados
-    if print_:
-      print('DataFrame1')
-      df1.show(show)
-      df1.printSchema()
-      print('DataFrame2')
-      df2.show(show)
-      df2.printSchema()
-      print('DataFrame3')
-      df3.show(show)
-      df3.printSchema()
-    return [df1, df2, df3]
+    #lectura de archivos .json
+    df1 = spark.read.json(files, multiLine=True)
+    #se realizan las transformaciones necesarias para obtener cada uno de los elementos del esquema
+    df1 = df1.withColumn('viajes', F.explode(F.col('viajes'))).select('identificador','viajes.*').orderBy('identificador')
+    df1.collect()
+    return [df1]
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
-#función para unión de datos de los dataframes (data=lista de dataframes) y selección de las columnas requeridas (select=lista de columnas)
-def unir_datos(data=[], select=[], show=20, print_=True):
+#función para generar las tablas con los resultados de los datos procesados
+def generar_tablas(df=[]):
   try:
-    #unión de los dataframes a partir de las columnas relacionadas
-    dfResultados1 = data[2].join(data[1], data[1].codigo_ruta == data[2].codigo_ruta)\
-    .join(data[0], data[0].cedula == data[2].cedula)
-    #selección de las columnas requeridas
-    dfResultados2 = dfResultados1.select(select).dropna()
-    #impresión de resultados
-    if print_:
-      dfResultados1.show(show)
-      dfResultados2.show(show)
-    return [dfResultados1, dfResultados2]
+    #se crean dataframes temporales que sirven como tablas intermedias para el filtrado y agregación de los datos
+    df1a = df[0].withColumnRenamed('codigo_postal_origen','codigo_postal').withColumn('tipo', F.lit('origen'))\
+    .groupBy('codigo_postal', 'tipo').agg(F.count('codigo_postal').alias('cantidad_viajes'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+    df1b = df[0].withColumnRenamed('codigo_postal_destino','codigo_postal').withColumn('tipo', F.lit('destino'))\
+    .groupBy('codigo_postal', 'tipo').agg(F.count('codigo_postal').alias('cantidad_viajes'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+    df1c = df[0].select('identificador', 'kilometros', 'precio_kilometro')\
+    .groupBy('identificador').agg(F.sum('kilometros').alias('cantidad_kms'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+    #tabla correspondiente a la cantidad de viajes por código postal
+    df2 = df1a.union(df1b).select('codigo_postal', 'tipo', 'cantidad_viajes').orderBy(F.col('codigo_postal'), F.col('tipo').desc())
+    #tabla correspondiente a los ingresos totales por código postal
+    df3 = df1a.union(df1b).select('codigo_postal', 'tipo', F.round('ingresos',2).alias('ingresos')).orderBy(F.col('codigo_postal'), F.col('tipo').desc())
+    #tabla correspondiente a la cantidad de kms e ingresos por identificador de conductor
+    df4 = df1c.select('identificador', F.round('cantidad_kms',2).alias('cantidad_kms'), F.round('ingresos',2).alias('ingresos')).orderBy(F.col('identificador'))
+    #tabla correspondiente a métricas particulares
+    data = [('persona_con_mas_kilometros', df4.groupBy('identificador').agg(F.max('cantidad_kms')).orderBy(F.col('max(cantidad_kms)').desc()).collect()[0][0]),\
+            ('persona_con_mas_ingresos', df4.groupBy('identificador').agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc()).collect()[0][0]),\
+            ('percentil_25', df4.select(F.percentile_approx('ingresos', .25)).collect()[0][0]),\
+            ('percentil_50', df4.select(F.percentile_approx('ingresos', .50)).collect()[0][0]),\
+            ('percentil_75', df4.select(F.percentile_approx('ingresos', .75)).collect()[0][0]),\
+            ('codigo_postal_origen_con_mas_ingresos', df1a.groupBy('codigo_postal').agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc()).collect()[0][0]),\
+            ('codigo_postal_destino_con_mas_ingresos', df1b.groupBy('codigo_postal').agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc()).collect()[0][0])]
+    schema = StructType(\
+                        [StructField('tipo_metrica',StringType()),
+                         StructField('valor',StringType()),])
+    df5 = spark.createDataFrame(data, schema)
+    #se agregan los dataframes a una lista para la iteración
+    proceso = [df2, df3, df5]
+    #por medio de las funciones list-map-lambda se ejecutan las operaciones iterando sobre los dataframes creados
+    list(map(lambda x: {x.printSchema(), x.show(50)}, proceso)) #se despliegan el esquema y los datos correspondientes a cada tabla
+    return proceso
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
-#función para agrupar y agregar los datos (data=dataframe) a partir de las columnas especificadas (group=columnas a agrupar, agg=columna de agregación)
-def agregar_datos(data=[], group=[], agg='', show=20, print_=True):
+#función para almacenar los dataframes en formato .csv
+def almacenar_tablas(df=[], files_name=[]):
   try:
-    #agrupación y agregación de los datos (totales y promedios)
-    dfResultados3 = data[1].groupBy(group).agg(F.sum(agg),F.mean(agg))\
-    .withColumn('sum('+agg+')', F.round('sum('+agg+')',2))\
-    .withColumn('avg('+agg+')', F.round('avg('+agg+')',2))
-    #impresión de resultados
-    if print_:
-      dfResultados3.show(show)
-    return [dfResultados3]
-  except Exception as e:
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
-
-#función para presentar los datos (data=dataframe) particionados (part=columna) y ordenados (order=columna) con un límite (top=cantidad de filas)
-def presentar_datos(data=[], top=5, part='', order='', show=20, print_=True):
-  try:
-    #definición de operación de partición y ordenamiento
-    window = W.Window.partitionBy(part).orderBy(F.col(part).desc(), F.col(order).desc())
-    #partición y ordenamiento de los datos
-    dfResultados4 = data[0].withColumn('row',F.row_number().over(window))\
-    .filter(F.col('row')<=top).drop('row')
-    #impresión de resultados
-    if print_:
-      print('\nDataFrame: Top 5 total de kms y promedio de kms diario, por provincia.')
-      dfResultados4.show(show)
-      print('\nEsquema del dataframe.')
-      dfResultados4.printSchema()
-      print('\nExplicación de ejecución de spark.')
-      dfResultados4.explain()
-    return [dfResultados4]
-  except Exception as e:
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
-
-#función para guardar los datos (data=dataframe) con nombre (nombre=nombre del archivo)
-def almacenar_datos(data=[], nombre='default.csv', show=20, print_=True):
-  try:
-    #escritura de archivo
-    data[0].write.csv(nombre, mode='overwrite')
-    #lectura de archivo guardado
-    dfResultados5 = spark.read.csv(nombre, schema=data[0].schema)
-    #impresión de resultados
-    if print_:
-      print('\nDataFrame: obtenido del archivo '+nombre+'.')
-      dfResultados5.show(show)
-      print('\nDataFrame: descripción de los datos por provincia.')
-      dfResultados5.groupby(dfResultados5[0]).agg(F.count(dfResultados5[2]).alias('count'),F.min(dfResultados5[2]).alias('min'),F.max(dfResultados5[2]).alias('max'),F.round(F.mean(dfResultados5[2]),2).alias('avg')).show()
-    return [dfResultados5]
+    #escritura de los archivos
+    csv_files=[]
+    if (len(df)==len(files_name)):
+      #se ejecutan las operaciones de escritura iterando sobre cada objeto
+      list(map(lambda x, y: {x.write.csv(y, mode='overwrite')}, df, files_name))
+      #se ejecuta una función de comprobación, leyendo cada archivo creado
+      [csv_files.append(spark.read.csv(files_name[i])) for i in range(len(files_name))]
+      if csv_files: print('Tablas almacenadas: '+ str(files_name))
+    return csv_files
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
