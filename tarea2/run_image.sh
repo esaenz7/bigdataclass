@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+docker network create \
+    --driver=bridge \
+    --subnet=10.7.84.0/24 \
+    --ip-range=10.7.84.100/24 \
+    --gateway=10.7.84.254 \
+    bigdatanet
+#
+docker run --name bigdata_tarea2_esv_2 \
+    --net bigdatanet --ip=10.7.84.102 \
+    -e POSTGRES_PASSWORD=testPassword \
+    -p 5433:5432 \
+    -d postgres   
+
+# psql -h localhost -U postgres -p 5433 < initialize.sql
+#
+docker run --name bigdata_tarea2_esv_1 \
+    --net bigdatanet --ip=10.7.84.101 \
+    -p 8888:8888 \
+    -it bigdata_tarea2_esv \
+    /bin/bash
+#
