@@ -101,7 +101,7 @@ def test_stage2(tstage2, tstage2_expected, tstageextra_expected):
 #prueba de almacenamiento
 def test_stage3(tstage3):
   assert type(tstage3) == list
-  assert len(tstage3) == 3
+  assert len(tstage3) == 4
   assert tstage3[0].count() == 30
   assert tstage3[1].count() == 30
   assert tstage3[2].count() == 7
