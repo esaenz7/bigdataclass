@@ -8,4 +8,4 @@ PGPASSWORD=testPassword psql -h 10.7.84.102 -U postgres -p 5432 < create_metrica
 spark-submit \
     --driver-class-path postgresql-42.2.14.jar \
     --jars postgresql-42.2.14.jar \
-    programaextra.py 10.7.84.102 5432 postgres testPassword metricas persona*.json
+    programaextra.py 10.7.84.102 5432 postgres testPassword metricas fpersona*.json
