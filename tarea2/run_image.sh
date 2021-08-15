@@ -18,4 +18,3 @@ docker run --name bigdata_tarea2_esv_1 \
     -p 8888:8888 \
     -it bigdata_tarea2_esv \
     /bin/bash
-#
