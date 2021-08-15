@@ -48,4 +48,4 @@ dataframe = spark \
     .load()
 
 print('Postgres dbTable: metricas\n')
-dataframe.show()
+dataframe.show(truncate=False)
