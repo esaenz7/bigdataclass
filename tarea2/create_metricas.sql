@@ -6,7 +6,7 @@ CREATE TABLE metricas (
   id SERIAL PRIMARY KEY,
   tipo_metrica VARCHAR(50) NOT NULL,
   valor VARCHAR(50) NOT NULL,
-  fecha DATE NOT NULL
+  fecha VARCHAR(50) NOT NULL
 );
 
 COMMIT;

@@ -22,7 +22,7 @@ files = [x for x in args if '.json' in x]
 #llamado a la función ejecutar_proceso
 dfinicial = cargar_datos(files)
 proceso = generar_tablas(dfinicial)
-df_metricas = proceso[2]
+df_metricas = proceso[3]
 
 #sesión spark
 spark = SparkSession.builder.appName("PSQL Transactions").getOrCreate()
