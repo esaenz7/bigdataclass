@@ -12,8 +12,6 @@ docker run --name bigdata_tarea2_esv_2 \
     -e POSTGRES_PASSWORD=testPassword \
     -p 5433:5432 \
     -d postgres   
-
-# psql -h localhost -U postgres -p 5433 < initialize.sql
 #
 docker run --name bigdata_tarea2_esv_1 \
     --net bigdatanet --ip=10.7.84.101 \

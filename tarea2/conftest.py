@@ -9,58 +9,7 @@ Descripción:
 import pytest
 from procesamientodatos import *
 
-#definición de los parámetros (fixtures) de pruebas según las diferentes etapas de ejecución del programa
-#
-#***resultados actuales*** obtenidos durante la ejecución del programa de forma regular
-#
-#parámetro para prueba de carga de datos
-dfinicial = cargar_datos('persona*.json')
-@pytest.fixture
-def tstage1():
-  return dfinicial
-#parámetro para prueba de procesamiento de datos
-proceso = generar_tablas(dfinicial)
-@pytest.fixture
-def tstage2():
-  return proceso
-#parámetro para prueba de almacenamiento
-archivos = almacenar_tablas(proceso, ['total_viajes.csv', 'total_ingresos.csv', 'metricas.csv'])
-@pytest.fixture
-def tstage3():
-  return archivos
-#
-#***resultados actuales*** obtenidos durante la ejecución del programa alterando valores en los datos
-#
-#parámetro para prueba completa con valores en cero (kilometros)
-@pytest.fixture
-def tzerodata():
-  dfzerodata = dfinicial[0]
-  #se reemplazan algunos valores de la columna "kilometros" por 0
-  dfzerodata = dfzerodata.withColumn('precio_kilometro', F.when(F.col('kilometros')<5, 0).otherwise(F.col('precio_kilometro')))
-  #se procesan los datos con la función "generar_tablas()"
-  rzerodata = generar_tablas([dfzerodata])
-  return rzerodata[1]
-#parámetro para prueba completa con valores nulos (codigo_postal_*)
-@pytest.fixture
-def tmissdata():
-  dfmissdata = dfinicial[0]
-  #se reemplazan algunos valores de las columnas "codigo_postal_destino" y "codigo_postal_destino" por nulos
-  dfmissdata = dfmissdata.withColumn('codigo_postal_destino', F.when(F.col('kilometros')<5, '').otherwise(F.col('codigo_postal_destino')))
-  dfmissdata = dfmissdata.withColumn('codigo_postal_origen', F.when(F.col('kilometros')>20, '').otherwise(F.col('codigo_postal_origen')))
-  #se procesan los datos con la función "generar_tablas()"
-  rmissdata = generar_tablas([dfmissdata])
-  return rmissdata[0]
-#parámetro para prueba completa con filas eliminadas (filtradas)
-@pytest.fixture
-def tdeldata():
-  dfdeldata = dfinicial[0]
-  #se eliminan algunas filas por completo (filtro por "precio_kilometro" > 450)
-  dfdeldata = dfdeldata.filter('precio_kilometro > 450')
-  #se procesan los datos con la función "generar_tablas()"
-  rdeldata = generar_tablas([dfdeldata])
-  return rdeldata[0]
-
-#***resultados esperados*** para pruebas de comparación
+#definición de los parámetros (fixtures) con los resultados esperados para las pruebas de comparación
 #
 #parámetro para prueba de resultados finales completos
 @pytest.fixture
@@ -134,6 +83,46 @@ def tstage2_expected():
           ('codigo_postal_destino_con_mas_ingresos', '40501')]
   stage2_expected = [spark.createDataFrame(data1), spark.createDataFrame(data2), spark.createDataFrame(data3)]
   return stage2_expected
+#parámetro para prueba de funcionalidad ***EXTRA*** (archivos con fecha)
+@pytest.fixture
+def tstageextra_expected():
+  data1 = [('persona_con_mas_kilometros', '2020/06/11', '01004'),
+          ('persona_con_mas_kilometros', '2020/06/10', '01004'),
+          ('persona_con_mas_kilometros', '2020/06/09', '01002'),
+          ('persona_con_mas_kilometros', '2020/06/08', '01004'),
+          ('persona_con_mas_kilometros', '2020/06/07', '01002'),
+          ('persona_con_mas_ingresos', '2020/06/11', '01004'),
+          ('persona_con_mas_ingresos', '2020/06/10', '01004'),
+          ('persona_con_mas_ingresos', '2020/06/09', '01002'),
+          ('persona_con_mas_ingresos', '2020/06/08', '01004'),
+          ('persona_con_mas_ingresos', '2020/06/07', '01002'),
+          ('percentil_25', '2020/06/11', '3125.5'),
+          ('percentil_25', '2020/06/10', '5475.0'),
+          ('percentil_25', '2020/06/09', '4880.5'),
+          ('percentil_25', '2020/06/08', '6135.0'),
+          ('percentil_25', '2020/06/07', '7919.0'),
+          ('percentil_50', '2020/06/11', '5562.0'),
+          ('percentil_50', '2020/06/10', '5679.0'),
+          ('percentil_50', '2020/06/09', '6183.0'),
+          ('percentil_50', '2020/06/08', '12618.0'),
+          ('percentil_50', '2020/06/07', '13450.5'),
+          ('percentil_75', '2020/06/11', '6411.0'),
+          ('percentil_75', '2020/06/10', '6604.5'),
+          ('percentil_75', '2020/06/09', '8656.0'),
+          ('percentil_75', '2020/06/08', '14166.5'),
+          ('percentil_75', '2020/06/07', '13495.0'),
+          ('codigo_postal_origen_con_mas_ingresos', '2020/06/11', '20101'),
+          ('codigo_postal_origen_con_mas_ingresos', '2020/06/10', '30101'),
+          ('codigo_postal_origen_con_mas_ingresos', '2020/06/09', '40301'),
+          ('codigo_postal_origen_con_mas_ingresos', '2020/06/08', '10101'),
+          ('codigo_postal_origen_con_mas_ingresos', '2020/06/07', '40401'),
+          ('codigo_postal_destino_con_mas_ingresos', '2020/06/11', '40501'),
+          ('codigo_postal_destino_con_mas_ingresos', '2020/06/10', '40501'),
+          ('codigo_postal_destino_con_mas_ingresos', '2020/06/09', '40401'),
+          ('codigo_postal_destino_con_mas_ingresos', '2020/06/08', '10801'),
+          ('codigo_postal_destino_con_mas_ingresos', '2020/06/07', '40701')]
+  stageextra_expected = [spark.createDataFrame(data1)]
+  return stageextra_expected
 #parámetro para prueba completa con valores en cero
 @pytest.fixture
 def tzerodata_expected():

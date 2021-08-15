@@ -10,9 +10,10 @@ Métodos:
 '''
 
 #librerías necesarias
-import sys, os, datetime
-from pyspark.sql import SparkSession, functions as F, window as W
+import sys, os, glob, datetime as dt
+from pyspark.sql import SparkSession, functions as F, window as W, DataFrame as DF
 from pyspark.sql.types import (DateType, IntegerType, FloatType, DoubleType, LongType, StringType, StructField, StructType, TimestampType)
+from functools import reduce
 
 #sesión de spark
 spark = SparkSession.builder\
@@ -61,12 +62,42 @@ def generar_tablas(df=[]):
             ('codigo_postal_destino_con_mas_ingresos', df1b.groupBy('codigo_postal').agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc()).collect()[0][0])]
     schema = StructType(\
                         [StructField('tipo_metrica',StringType()),
-                         StructField('valor',StringType()),])
+                        StructField('valor',StringType()),])
     df5 = spark.createDataFrame(data, schema)
     #se agregan los dataframes a una lista para la iteración
     proceso = [df2, df3, df5]
+    #
+    if 'fecha' in df[0].columns: #código para tabla de métricas en Parte Extra (existe columna fecha)
+      window = W.Window.partitionBy('fecha')
+      dfe1a = df[0].withColumnRenamed('codigo_postal_origen','codigo_postal').withColumn('tipo', F.lit('origen'))\
+      .groupBy('codigo_postal', 'tipo', 'fecha').agg(F.count('codigo_postal').alias('cantidad_viajes'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+      dfe1b = df[0].withColumnRenamed('codigo_postal_destino','codigo_postal').withColumn('tipo', F.lit('destino'))\
+      .groupBy('codigo_postal', 'tipo', 'fecha').agg(F.count('codigo_postal').alias('cantidad_viajes'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+      dfe1c = df[0].select('identificador', 'kilometros', 'precio_kilometro', 'fecha')\
+      .groupBy('identificador', 'fecha').agg(F.sum('kilometros').alias('cantidad_kms'), F.sum(F.col('kilometros')*F.col('precio_kilometro')).alias('ingresos'))
+      #tabla correspondiente a la cantidad de viajes por código postal
+      dfe2 = dfe1a.union(dfe1b).select('codigo_postal', 'tipo', 'cantidad_viajes', 'fecha').orderBy(F.col('codigo_postal'), F.col('tipo').desc(), F.col('fecha'))
+      #tabla correspondiente a los ingresos totales por código postal
+      dfe3 = dfe1a.union(dfe1b).select('codigo_postal', 'tipo', F.round('ingresos',2).alias('ingresos'), 'fecha').orderBy(F.col('codigo_postal'), F.col('tipo').desc(), F.col('fecha'))
+      #tabla correspondiente a la cantidad de kms e ingresos por identificador de conductor
+      dfe4 = dfe1c.select('identificador', F.round('cantidad_kms',2).alias('cantidad_kms'), F.round('ingresos',2).alias('ingresos'), 'fecha').orderBy(F.col('identificador'), F.col('fecha'))
+      #tabla correspondiente a métricas particulares
+      met1 = dfe4.groupBy(F.lit('persona_con_mas_kilometros').alias('tipo_metrica'), 'fecha', F.col('identificador').alias('valor')).agg(F.max('cantidad_kms')).orderBy(F.col('max(cantidad_kms)').desc())\
+              .withColumn('row',F.row_number().over(W.Window.partitionBy('fecha').orderBy(F.col('fecha').desc()))).filter(F.col('row')<=1).drop('row').drop('max(cantidad_kms)').orderBy(F.col('fecha').desc())
+      met2 = dfe4.groupBy(F.lit('persona_con_mas_ingresos').alias('tipo_metrica'), 'fecha', F.col('identificador').alias('valor')).agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc())\
+              .withColumn('row',F.row_number().over(W.Window.partitionBy('fecha').orderBy(F.col('fecha').desc()))).filter(F.col('row')<=1).drop('row').drop('max(ingresos)').orderBy(F.col('fecha').desc())
+      met3 = dfe4.groupBy(F.lit('percentil_25').alias('tipo_metrica'), 'fecha').agg(F.percentile_approx('ingresos', .25).alias('valor')).orderBy(F.col('fecha').desc())
+      met4 = dfe4.groupBy(F.lit('percentil_50').alias('tipo_metrica'), 'fecha').agg(F.percentile_approx('ingresos', .50).alias('valor')).orderBy(F.col('fecha').desc())
+      met5 = dfe4.groupBy(F.lit('percentil_75').alias('tipo_metrica'), 'fecha').agg(F.percentile_approx('ingresos', .75).alias('valor')).orderBy(F.col('fecha').desc())
+      met6 = dfe3.where('tipo like "origen"').groupBy(F.lit('codigo_postal_origen_con_mas_ingresos').alias('tipo_metrica'), 'fecha', F.col('codigo_postal').alias('valor')).agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc())\
+              .withColumn('row',F.row_number().over(W.Window.partitionBy('fecha').orderBy(F.col('fecha').desc()))).filter(F.col('row')<=1).drop('row').drop('max(ingresos)').orderBy(F.col('fecha').desc())
+      met7 = dfe3.where('tipo like "destino"').groupBy(F.lit('codigo_postal_destino_con_mas_ingresos').alias('tipo_metrica'), 'fecha', F.col('codigo_postal').alias('valor')).agg(F.max('ingresos')).orderBy(F.col('max(ingresos)').desc())\
+              .withColumn('row',F.row_number().over(W.Window.partitionBy('fecha').orderBy(F.col('fecha').desc()))).filter(F.col('row')<=1).drop('row').drop('max(ingresos)').orderBy(F.col('fecha').desc())
+      dfe5 = reduce(DF.unionAll, [met1, met2, met3, met4, met5, met6, met7])
+      proceso.append(dfe5)
+    #
     #por medio de las funciones list-map-lambda se ejecutan las operaciones iterando sobre los dataframes creados
-    list(map(lambda x: {x.printSchema(), x.show(50)}, proceso)) #se despliegan el esquema y los datos correspondientes a cada tabla
+    list(map(lambda x: {x.printSchema(), x.show(50, truncate=False)}, proceso)) #se despliegan el esquema y los datos correspondientes a cada tabla
     return proceso
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()

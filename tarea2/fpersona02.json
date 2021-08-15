@@ -5,61 +5,71 @@
       "codigo_postal_origen": "40401",
       "codigo_postal_destino": "10301",
       "kilometros": "20.64",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/07"
     },
     {
       "codigo_postal_origen": "40201",
       "codigo_postal_destino": "10301",
       "kilometros": "17.99",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/07"
     },
     {
       "codigo_postal_origen": "40201",
       "codigo_postal_destino": "40401",
       "kilometros": "13.07",
-      "precio_kilometro": "300"
+      "precio_kilometro": "300",
+      "fecha": "2020/06/08"
     },
     {
       "codigo_postal_origen": "10101",
       "codigo_postal_destino": "11801",
       "kilometros": "3.69",
-      "precio_kilometro": "600"
+      "precio_kilometro": "600",
+      "fecha": "2020/06/08"
     },
     {
       "codigo_postal_origen": "40301",
       "codigo_postal_destino": "40401",
       "kilometros": "18.5",
-      "precio_kilometro": "400"
+      "precio_kilometro": "400",
+      "fecha": "2020/06/09"
     },
     {
       "codigo_postal_origen": "40401",
       "codigo_postal_destino": "11301",
       "kilometros": "25.63",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/09"
     },
     {
       "codigo_postal_origen": "10101",
       "codigo_postal_destino": "40801",
       "kilometros": "5.61",
-      "precio_kilometro": "450"
+      "precio_kilometro": "450",
+      "fecha": "2020/06/10"
     },
     {
       "codigo_postal_origen": "11401",
       "codigo_postal_destino": "30101",
       "kilometros": "6.8",
-      "precio_kilometro": "600"
+      "precio_kilometro": "600",
+      "fecha": "2020/06/10"
     },
     {
       "codigo_postal_origen": "11401",
       "codigo_postal_destino": "11101",
       "kilometros": "5.7",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/11"
     },
     {
       "codigo_postal_origen": "30101",
       "codigo_postal_destino": "11101",
       "kilometros": "3.23",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/11"
     }
   ]
 }

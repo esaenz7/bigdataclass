@@ -5,61 +5,71 @@
       "codigo_postal_origen": "40801",
       "codigo_postal_destino": "11101",
       "kilometros": "1.24",
-      "precio_kilometro": "300"
+      "precio_kilometro": "300",
+      "fecha": "2020/06/07"
     },
     {
       "codigo_postal_origen": "40701",
       "codigo_postal_destino": "40701",
       "kilometros": "23.86",
-      "precio_kilometro": "550"
+      "precio_kilometro": "550",
+      "fecha": "2020/06/07"
     },
     {
       "codigo_postal_origen": "10201",
       "codigo_postal_destino": "40101",
       "kilometros": "8.59",
-      "precio_kilometro": "400"
+      "precio_kilometro": "400",
+      "fecha": "2020/06/08"
     },
     {
       "codigo_postal_origen": "40701",
       "codigo_postal_destino": "10801",
       "kilometros": "24.45",
-      "precio_kilometro": "600"
+      "precio_kilometro": "600",
+      "fecha": "2020/06/08"
     },
     {
       "codigo_postal_origen": "20101",
       "codigo_postal_destino": "40401",
       "kilometros": "8.79",
-      "precio_kilometro": "300"
+      "precio_kilometro": "300",
+      "fecha": "2020/06/09"
     },
     {
       "codigo_postal_origen": "40301",
       "codigo_postal_destino": "11101",
       "kilometros": "6.41",
-      "precio_kilometro": "350"
+      "precio_kilometro": "350",
+      "fecha": "2020/06/09"
     },
     {
       "codigo_postal_origen": "30101",
       "codigo_postal_destino": "11301",
       "kilometros": "27.2",
-      "precio_kilometro": "300"
+      "precio_kilometro": "300",
+      "fecha": "2020/06/10"
     },
     {
       "codigo_postal_origen": "20101",
       "codigo_postal_destino": "10301",
       "kilometros": "1.71",
-      "precio_kilometro": "550"
+      "precio_kilometro": "550",
+      "fecha": "2020/06/10"
     },
     {
       "codigo_postal_origen": "20101",
       "codigo_postal_destino": "40401",
       "kilometros": "14.01",
-      "precio_kilometro": "400"
+      "precio_kilometro": "400",
+      "fecha": "2020/06/11"
     },
     {
       "codigo_postal_origen": "20101",
       "codigo_postal_destino": "40501",
       "kilometros": "15.4",
-      "precio_kilometro": "550"
+      "precio_kilometro": "550",
+      "fecha": "2020/06/11"
     }
   ]
 }

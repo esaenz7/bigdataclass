@@ -1,8 +1,8 @@
 '''
 Nombre de archivo:
-  +test_programaestudiante.py
+  +test_programaextra.py
 Descripción: 
-  +Archivo para la ejecuión de las pruebas del programa
+  +Archivo para la ejecuión de las pruebas del programa ***Parte Extra***
 '''
 
 #librerías necesarias
@@ -15,7 +15,7 @@ from procesamientodatos import *
 #***resultados actuales*** obtenidos durante la ejecución del programa de forma regular
 #
 #parámetro para prueba de carga de datos
-dfinicial = cargar_datos('persona*.json')
+dfinicial = cargar_datos('fpersona*.json') #datos correspondientes a los archivos con columna adicional de fecha (formato fpersona*.json)
 @pytest.fixture
 def tstage1():
   return dfinicial
@@ -25,7 +25,7 @@ proceso = generar_tablas(dfinicial)
 def tstage2():
   return proceso
 #parámetro para prueba de almacenamiento
-archivos = almacenar_tablas(proceso, ['total_viajes.csv', 'total_ingresos.csv', 'metricas.csv'])
+archivos = almacenar_tablas(proceso, ['total_viajes.csv', 'total_ingresos.csv', 'metricas.csv', 'metricas_extra.csv'])
 @pytest.fixture
 def tstage3():
   return archivos
@@ -69,9 +69,9 @@ def test_stage1(tstage1):
   assert type(tstage1) == list
   assert len(tstage1) == 1
   assert tstage1[0].count() == 50
-  assert str(tstage1[0].dtypes) == "[('identificador', 'string'), ('codigo_postal_destino', 'string'), ('codigo_postal_origen', 'string'), ('kilometros', 'string'), ('precio_kilometro', 'string')]"
+  assert str(tstage1[0].dtypes) == "[('identificador', 'string'), ('codigo_postal_destino', 'string'), ('codigo_postal_origen', 'string'), ('fecha', 'string'), ('kilometros', 'string'), ('precio_kilometro', 'string')]"
 #prueba de procesamiento de datos
-def test_stage2(tstage2, tstage2_expected):
+def test_stage2(tstage2, tstage2_expected, tstageextra_expected):
   assert type(tstage2) == list
   assert tstage2[0].count() == 30
   assert tstage2[1].count() == 30
@@ -92,6 +92,12 @@ def test_stage2(tstage2, tstage2_expected):
   assert str(tstage2[2].dtypes) == "[('tipo_metrica', 'string'), ('valor', 'string')]"
   assert tstage2_expected[2].exceptAll(tstage2[2]).count() == 0
   assert tstage2[2].exceptAll(tstage2_expected[2]).count() == 0
+  #***prueba EXTRA***
+  #prueba de tabla de métricas funcionalidad extra (archivos con columna fecha)
+  assert str(tstage2[3].dtypes) == "[('tipo_metrica', 'string'), ('fecha', 'string'), ('valor', 'string')]"
+  assert tstageextra_expected[0].exceptAll(tstage2[3]).count() == 0
+  assert tstage2[3].exceptAll(tstageextra_expected[0]).count() == 0
+  #******************
 #prueba de almacenamiento
 def test_stage3(tstage3):
   assert type(tstage3) == list
