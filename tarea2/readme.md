@@ -22,7 +22,7 @@
             #spark-submit programaestudiante.py persona*.json
         b- Para ejecutar las pruebas del programa principal se debe aplicar el siguiente comando:
             #python -m pytest -vv test_programaestudiante.py
-        c- Para ejecutar las instrucciones 2 y 3 de forma automática, ejecute el archivo run.sh.
+        c- Para ejecutar las instrucciones 2 y 3 de forma automática, ejecute el archivo run_main.sh.
     5- Parte EXTRA:
         a- Para ejecutar el programa principal se debe aplicar el siguiente comando:
             #spark-submit programaestudiante.py fpersona*.json
@@ -39,6 +39,7 @@
             --jars postgresql-42.2.14.jar \
             programaextra.py 10.7.84.102 5432 postgres testPassword metricas fpersona*.json
             El comando recibe como parámetros el archivo "programaextra.py", la dirección IP y puerto (10.7.84.102 5432) correspondientes al contenedor de "postgres", el usuario y password de la base de datos (postgres testPassword), la tabla en donde se realizará el almacenamiento de los datos (metricas) y los archivos "fpersona*.json" en formato JSON correspondientes a los datos. Al final de la ejecución se hace una lectura de comprobación hacia la tabla, la cual es impresa en consola.
+        e- Para ejecutar todos los comandos de la parte extra de forma automática, ejecute el archivo run_extra.sh.
 
 ### Detalles del trabajo
 
