@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+proyecto/datasource/2018.csv
+proyecto/datasource/airports.dat
+proyecto/datasource/arabica_data_cleaned.csv
+proyecto/datasource/Environment_Temperature_change_E_All_Data_NOFLAG.csv
+proyecto/datasource/robusta_data_cleaned.csv
+proyecto/datasource/WeatherEvents_Jan2016-Dec2020.csv
