@@ -14,13 +14,16 @@ RUN apk add zlib-dev
 RUN apk add jpeg-dev
 RUN apk add zeromq-dev
 RUN pip3 install --upgrade pip setuptools wheel
+RUN pip3 install notebook
 RUN pip3 install numpy
+RUN pip3 install scipy
+RUN pip3 install scikit-learn
 RUN pip3 install matplotlib
 RUN pip3 install seaborn
-RUN pip3 install pyspark
 RUN pip3 install pytest
-RUN pip3 install notebook
+RUN pip3 install pyspark
 RUN pip3 install findspark
+RUN pip3 install gdown
 RUN ln /usr/bin/python3.7 /usr/bin/python
 
 WORKDIR /src

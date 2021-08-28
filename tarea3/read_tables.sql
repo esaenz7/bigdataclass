@@ -1,0 +1,8 @@
+BEGIN;
+
+SELECT * FROM tarea3 LIMIT (5);
+SELECT * FROM modelo1 LIMIT (5);
+SELECT * FROM modelo2 LIMIT (5);
+SELECT * FROM modelo3 LIMIT (5);
+
+COMMIT;
