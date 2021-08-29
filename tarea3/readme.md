@@ -12,47 +12,41 @@
 
 1. Para cargar el contenedor con todos los recursos necesarios, ejecute los archivos:
 
-    a) clean_docker.sh. Este script borrará contenedores e imágenes antiguos correspondientes a este proyecto. **Atención: el comando realiza una acción de "prune" para la limpieza.**
+    a) **clean_docker.sh**. Este script borrará contenedores e imágenes antiguos correspondientes a este proyecto. **Atención: el comando realiza una acción de "prune" para la limpieza.**
 
-    b) build_image.sh. Construye una imagen a partir del archivo DockerFile.
+    b) **build_image.sh**. Construye una imagen a partir del archivo DockerFile.
 
-    c) run_image.sh. Este script creará 2 contenedores y una red local en docker de la siguiente forma:
+    c) **run_image.sh**. Este script creará 2 contenedores y una red local en docker de la siguiente forma:
 
         * Red: bigdatanet, IP: 10.7.84.0/24.
-        * Host principal (sesión bash donde se ejecutarán los comandos): bigdata_tarea2_esv, IP: 10.7.84.101.
-        * Host secundario (base de datos): postgres,  IP: 10.7.84.102.
+        * Host principal (sesión bash donde se ejecutarán los comandos): bigdata_tarea3_esv_1, IP: 10.7.84.101.
+        * Host secundario (base de datos): bigdata_tarea3_esv_2 (postgres),  IP: 10.7.84.102.
+
+    d) Estos parámetros corresponden a la instancia de postgres dentro del ambiente de docker:
+
+        * Host: 10.7.84.102
+        * Puerto: 5432
+        * Usuario: postgres
+        * Clave: testPassword
 
 2. Programa principal:
 
-    a) Para ejecutar el programa principal se debe aplicar el siguiente comando:
+    a) Ejecute el archivo:
 
-        #spark-submit programaestudiante.py persona*.json
+        #run_main.sh
 
-    b) Para ejecutar las pruebas del programa principal se debe aplicar el siguiente comando:
+    Este comando ejecutará un query psql para crear las tablas necesarias en la base de datos postgres. Luego cargará el servidor de Jupyter para accesar al directorio en donde se encuentra el notebook con el trabajo propiamente.
 
-        #python -m pytest -vv test_programaestudiante.py
+    El notebook "BIGDATA_07_2021_Tarea3_ESV.ipynb" almacena los recursos, el código, la documentación y los resultados solicitados. Se ejecuta de forma completa y secuencial. Adicional se incluyen copias en formatos HTML y PDF.
 
-    c) Para ejecutar las instrucciones a y b anteriores de forma automática, ejecute el archivo:
+    b) Luego de cerrar la sesión del servidor de Jupyter se puede ejecutar el siguiente comando desde la misma sesión BASH del contenedor principal.
 
-        #run_main.sh.
+        #run_read.sh
 
-### Detalles del trabajo
+    Este comando ejecutará un query psql para ralizar una lectura de los datos contenidos en las tablas recién creadas y utilizadas por el código del notebook.
 
-* El programa consta de los siguientes archivos:
-    1. **procesamientodatos.py** (lógica de procesamiento).
-    2. **programaestudiante.py** (programa principal).
-    3. **conftest.py** (contexto para las pruebas).
-    4. **test_programaestudiante.py** (ejecución de pruebas).
-    5. **test_programaextra.py** (ejecución de pruebas del programa extra).
-    6. **programaextra.py** (programa extra).
-* La aplicación principal se ejecuta por etapas (stage) encapsuladas cada una por una función en específico.
-    1. **Stage1**: cargar_datos(...).
-    2. **Stage2**: generar_tablas(...).
-    3. **Stage3**: almacenar_tablas(...).
-* La fuente de datos del programa son archivos en formato JSON con el nombre "persona*.json" y con estructura definida según el enunciado del trabajo.
-* El programa reconoce los nombres "fpersona*.json" como archivos tipo JSON con la columna adicional de fecha, por lo que el mismo código es capaz de ejecutar tanto estos archivos, como los archivos originales "persona*.json" (sin la columna fecha).
-* El código fuente en cada archivo cuenta con comentarios detallados que explican la lógica del programa.
-* Se inluye un jupyter notebook de Google Colab con todo el código necesario, como complemento.
+    c) Una vez haya terminado, puede ejecutar el comando **clean_docker.sh** en el host de docker para limpiar los recursos creados para este trabajo.
+
 * El repositorio completo de la tarea se encuentra también en el siguiente enlace [github/esaenz7](https://github.com/esaenz7/bigdataclass/tree/main/tarea3).
 
 ---
