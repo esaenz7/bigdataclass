@@ -21,6 +21,7 @@ RUN pip3 install scikit-learn
 RUN pip3 install matplotlib
 RUN pip3 install seaborn
 RUN pip3 install pytest
+RUN pip3 install pytest-sugar
 RUN pip3 install pyspark
 RUN pip3 install findspark
 RUN pip3 install gdown
