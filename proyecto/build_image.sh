@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag bigdata_tarea3_esv .
+docker build --tag bigdata_proyecto_esv .

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-docker container stop bigdata_tarea3_esv_1
-docker container stop bigdata_tarea3_esv_2
+docker container stop bigdata_proyecto_esv_1
+docker container stop bigdata_proyecto_esv_2
 docker network rm bigdatanet
 docker kill $(docker ps -q)
 docker container prune -f

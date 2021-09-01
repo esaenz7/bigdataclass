@@ -9,16 +9,16 @@ docker network create \
     --gateway=10.7.84.254 \
     bigdatanet
 #
-docker run --name bigdata_tarea3_esv_2 \
+docker run --name bigdata_proyecto_esv_2 \
     --net bigdatanet --ip=10.7.84.102 \
     -e POSTGRES_PASSWORD=testPassword \
     -p 5433:5432 \
     -d postgres   
 #
-docker run --name bigdata_tarea3_esv_1 \
+docker run --name bigdata_proyecto_esv_1 \
     --net bigdatanet --ip=10.7.84.101 \
     -p 8888:8888 \
     -v "$(pwd)":/host_data \
-    -it bigdata_tarea3_esv \
+    -it bigdata_proyecto_esv \
     /bin/bash
 #
