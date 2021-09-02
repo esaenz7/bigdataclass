@@ -13,7 +13,7 @@ from preprocesamiento import *
 #crear_df
 #['/src/datasources/2018.csv', '/src/datasources/airports.dat', '/src/datasources/WeatherEvents_Jan2016-Dec2020.csv']
 df_list = crear_df(paths=['/src/datasources/2018.csv', '/src/datasources/airports.dat', '/src/datasources/WeatherEvents_Jan2016-Dec2020.csv'],
-          formats=['csv', 'csv', 'csv'], headers=[True, False, True], samples_fr=[.0001, 1., .0001], rand_st=999, print_=True)
+          formats=['csv', 'csv', 'csv'], headers=[True, False, True], samples_fr=[.01, 1., .01], rand_st=999, print_=True)
 #preprocesar_df
 df_listready = preprocesar_df(df_list, print_=True)
 #unir_df
