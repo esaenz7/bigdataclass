@@ -52,11 +52,11 @@ spark.sparkContext.setLogLevel("ERROR")
 def escribir_df(df, host=host, port=port, user=user, password=password, table='table'):
   try:
     #almacenamiento en base de datos
+      # .option("driver", "postgresql-42.2.14.jar") \
     df \
       .write \
       .format("jdbc") \
       .mode('overwrite') \
-      .option("driver", "postgresql-42.2.14.jar") \
       .option("url", "jdbc:postgresql://"+host+":"+port+"/postgres") \
       .option("user", user) \
       .option("password", password) \
@@ -74,10 +74,10 @@ dicha tabla será sobreescrita con valores nulos quedando vacía, por lo tanto e
 def leer_df(host=host, port=port, user=user, password=password, table='table'):
   try:
     #lectura desde base de datos hacia dataframe temporal
+      # .option("driver", "postgresql-42.2.14.jar") \
     df = spark \
       .read \
       .format("jdbc") \
-      .option("driver", "postgresql-42.2.14.jar") \
       .option("url", "jdbc:postgresql://"+host+":"+port+"/postgres") \
       .option("user", user) \
       .option("password", password) \
