@@ -23,7 +23,7 @@ from pyspark.mllib.evaluation import BinaryClassificationMetrics
 from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder
 from functools import reduce
 import findspark
-# findspark.init('/usr/lib/python3.7/site-packages/pyspark')
+findspark.init('/usr/lib/python3.7/site-packages/pyspark')
 # !pip install -q handyspark
 # from handyspark import *
 
@@ -48,7 +48,7 @@ spark.sparkContext.setLogLevel("ERROR")
 
 #funciones
 #función para almacenar en base de datos
-def escribir_df(df, host, port, user, password, table):
+def escribir_df(df, host=host, port=port, user=user, password=password, table='table'):
   try:
     #almacenamiento en base de datos
     df \
@@ -69,7 +69,7 @@ La ejecución de spark es una ejecución vaga ("lazy"), si se intenta almacenar 
 dicha tabla será sobreescrita con valores nulos quedando vacía, por lo tanto en dichos casos se recomienda utilizar una tabla temporal.
 '''
 #función para cargar de base de datos
-def leer_df(host, port, user, password, table):
+def leer_df(host=host, port=port, user=user, password=password, table='table'):
   try:
     #lectura desde base de datos hacia dataframe temporal
     df = spark \
