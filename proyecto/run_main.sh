@@ -9,8 +9,8 @@ PGPASSWORD=testPassword psql -h 10.7.84.102 -U postgres -p 5432 < create_tables.
 PGPASSWORD=testPassword psql -h 10.7.84.102 -U postgres -p 5432 < read_tables.sql
 #
 #main & test
-spark-submit main.py
-python -m pytest -vv
+# spark-submit main.py
+# python -m pytest -vv
 #
 # jupyter notebook \
 #     --ip=0.0.0.0 --port=8888 --allow-root

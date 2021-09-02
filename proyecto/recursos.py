@@ -9,7 +9,7 @@ Descripción:
 from IPython.display import Javascript
 import sys, os, glob, datetime as dt, numpy as np, collections as coll
 import pandas as pd, seaborn as sns, matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, classification_report, confusion_matrix
 from pyspark.sql import SparkSession, functions as F, window as W, DataFrame as DF
 from pyspark.sql.types import (DateType, IntegerType, FloatType, DoubleType, LongType, StringType, StructField, StructType, TimestampType)
 from pyspark.ml import functions as mlF, Pipeline as pipe
@@ -19,11 +19,11 @@ from pyspark.ml.feature import Imputer, StandardScaler, MinMaxScaler, Normalizer
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.classification import LogisticRegression, DecisionTreeClassifier, DecisionTreeClassificationModel, RandomForestClassifier, GBTClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from pyspark.mllib.evaluation import BinaryClassificationMetrics
+from pyspark.mllib.evaluation import BinaryClassificationMetrics, MulticlassMetrics
 from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder
 from functools import reduce
 import findspark
-findspark.init('/usr/lib/python3.7/site-packages/pyspark')
+# findspark.init('/usr/lib/python3.7/site-packages/pyspark')
 # !pip install -q handyspark
 # from handyspark import *
 
@@ -43,6 +43,7 @@ spark = SparkSession.builder\
   .config('spark.ui.port', '4050')\
   .config("spark.driver.extraClassPath", "postgresql-42.2.14.jar") \
   .config("spark.executor.extraClassPath", "postgresql-42.2.14.jar") \
+  .config("spark.jars", "postgresql-42.2.14.jar") \
   .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 
@@ -55,6 +56,7 @@ def escribir_df(df, host=host, port=port, user=user, password=password, table='t
       .write \
       .format("jdbc") \
       .mode('overwrite') \
+      .option("driver", "postgresql-42.2.14.jar") \
       .option("url", "jdbc:postgresql://"+host+":"+port+"/postgres") \
       .option("user", user) \
       .option("password", password) \
@@ -75,6 +77,7 @@ def leer_df(host=host, port=port, user=user, password=password, table='table'):
     df = spark \
       .read \
       .format("jdbc") \
+      .option("driver", "postgresql-42.2.14.jar") \
       .option("url", "jdbc:postgresql://"+host+":"+port+"/postgres") \
       .option("user", user) \
       .option("password", password) \
@@ -200,27 +203,27 @@ def plot_corr(df=None, inputcols=[]):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función de graficación ROC
-def plot_roc(df=None, ver=1, metric=None):
+def plot_metrics(dfcoll=None, ver=1, metric=None):
   try:
-    getval = lambda x: [i[0] for i in x]
-    getroc = lambda x,y: roc_curve(np.array(getval(x)), np.array(getval(y))[:,[1]].reshape(-1), pos_label=1)
-    fpr, tpr, thresholds = getroc(df.select(['label']).collect(), df.select(['probability']).collect())
+    fpr, tpr, thresholds = roc_curve(np.asarray(list(i[1] for i in dfcoll)), np.asarray(list(i[4][1] for i in dfcoll)))
     roc_auc = auc(fpr, tpr)
+    conf_mat = confusion_matrix(list(i[1] for i in dfcoll), list(i[5] for i in dfcoll))
     if ver==1:
-      plt.figure(figsize=(5,5))
-      plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
-      plt.plot([0, 1], [0, 1], 'k--')
-      plt.xlim([0.0, 1.0]), plt.ylim([0.0, 1.05])
-      plt.xlabel('False Positive Rate'), plt.ylabel('True Positive Rate')
-      plt.title('ROC Curve'), plt.legend(loc="lower right")
+      fig,ax = plt.subplots(1,2, figsize=(12,4))
+      ax[0].plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+      ax[0].plot([0, 1], [0, 1], 'k--')
+      ax[0].set_xlim([0.0, 1.0]), ax[0].set_ylim([0.0, 1.05])
+      ax[0].set_xlabel('Falsos positivos'), ax[0].set_ylabel('Verdaderos positivos')
+      ax[0].set_title('Curva ROC'), ax[0].legend(loc="lower right")
+      sns.heatmap(conf_mat, annot=True, fmt='.0f', ax=ax[1])
+      ax[1].set_title('Matriz de confusión')
       plt.show()
-      return (roc_auc, fpr, tpr, thresholds)
     else:
       fig, axs = plt.subplots(1, 2, figsize=(12, 4))
       metric.plot_roc_curve(ax=axs[0])
       metric.plot_pr_curve(ax=axs[1])
       plt.show()
-      return (roc_auc, fpr, tpr, thresholds)
+    return (roc_auc, fpr, tpr, thresholds, conf_mat)
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)

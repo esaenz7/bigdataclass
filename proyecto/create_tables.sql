@@ -18,6 +18,13 @@ evtim NUMERIC (32,16) NULL,
 label INTEGER NULL
 );
 
+DROP TABLE IF EXISTS tb_proyecto_v2;
+CREATE TABLE tb_proyecto_v2 (
+id SERIAL PRIMARY KEY,
+scaled [] NULL,
+label INTEGER NULL
+);
+
 DROP TABLE IF EXISTS tb_flights;
 CREATE TABLE tb_flights (
 id SERIAL PRIMARY KEY,
