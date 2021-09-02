@@ -21,7 +21,7 @@ label INTEGER NULL
 DROP TABLE IF EXISTS tb_proyecto_v2;
 CREATE TABLE tb_proyecto_v2 (
 id SERIAL PRIMARY KEY,
-scaled [] NULL,
+scaled NUMERIC (32,16) ARRAY NULL,
 label INTEGER NULL
 );
 
