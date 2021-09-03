@@ -4,10 +4,6 @@ BEGIN;
 SELECT count(*) FROM tb_proyecto;
 SELECT * FROM tb_proyecto LIMIT (5);
 \echo
-\echo 'tb_proyecto_v2'
-SELECT count(*) FROM tb_proyecto_v2;
-SELECT * FROM tb_proyecto_v2 LIMIT (5);
-\echo
 \echo 'tb_flights'
 SELECT count(*) FROM tb_flights;
 SELECT * FROM tb_flights LIMIT (5);
@@ -22,7 +18,6 @@ SELECT * FROM tb_weather LIMIT (5);
 \echo
 \echo
 \dt[+] tb_proyecto;
-\dt[+] tb_proyecto_v2;
 \dt[+] tb_flights;
 \dt[+] tb_airports;
 \dt[+] tb_weather;

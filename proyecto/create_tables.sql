@@ -18,13 +18,6 @@ evtim NUMERIC (32,16) NULL,
 label INTEGER NULL
 );
 
-DROP TABLE IF EXISTS tb_proyecto_v2;
-CREATE TABLE tb_proyecto_v2 (
-id SERIAL PRIMARY KEY,
-scaled NUMERIC (32,16) ARRAY NULL,
-label INTEGER NULL
-);
-
 DROP TABLE IF EXISTS tb_flights;
 CREATE TABLE tb_flights (
 id SERIAL PRIMARY KEY,
@@ -63,10 +56,11 @@ evhr NUMERIC (32,16) NULL,
 evtim NUMERIC (32,16) NULL
 );
 
+\echo
 SELECT table_name, column_name, data_type, numeric_precision, numeric_scale
 FROM information_schema.columns WHERE TABLE_NAME SIMILAR TO ('tb%|')
 ORDER BY 1;
-
+\echo
 \dt[+]
 
 COMMIT;
