@@ -30,12 +30,21 @@ def test_stage2(tstage2):
   assert tstage2[0].count() > 0
   assert tstage2[1].count() > 0
   assert tstage2[2].count() > 0
-  assert str(tstage2[0].dtypes) == "[('date', 'date'), ('orig', 'string'), ('dest', 'string'), ('carrier', 'string'), ('sdeptim', 'int'), ('depdel', 'int'), ('txout', 'int'), ('sarrtim', 'int'), ('selap', 'int'), ('dist', 'int'), ('dyofwk', 'int'), ('wkofyr', 'int'), ('sdephr', 'int'), ('sarrhr', 'int'), ('label', 'int')]"
+  assert str(tstage2[0].dtypes) == "[('date', 'date'), ('orig', 'string'), ('dest', 'string'), ('carrier', 'string'), ('depdel', 'int'), ('txout', 'int'), ('selap', 'int'), ('dist', 'int'), ('wkday', 'int'), ('month', 'int'), ('morning', 'int'), ('label', 'int')]"
   assert str(tstage2[1].dtypes) == "[('iata', 'string'), ('icao', 'string')]"
-  assert str(tstage2[2].dtypes) == "[('date', 'date'), ('wtyp', 'string'), ('wsev', 'string'), ('icao', 'string'), ('evhr', 'int'), ('evtim', 'int')]"
+  assert str(tstage2[2].dtypes) == "[('date', 'date'), ('wtyp', 'string'), ('wsev', 'string'), ('icao', 'string')]"
 
 #prueba de unión de datos
 def test_stage3(tstage3):
   assert type(tstage3) == DF
   assert tstage3.count() > 0
-  assert str(tstage3.dtypes) == "[('carrier', 'string'), ('sdephr', 'int'), ('sarrhr', 'int'), ('dyofwk', 'int'), ('wkofyr', 'int'), ('wtyp', 'string'), ('wsev', 'string'), ('depdel', 'int'), ('txout', 'int'), ('selap', 'int'), ('dist', 'int'), ('evtim', 'int'), ('label', 'int')]"
+  assert str(tstage3.dtypes) == "[('carrier', 'string'), ('wkday', 'int'), ('month', 'int'), ('morning', 'int'), ('wtyp', 'string'), ('wsev', 'string'), ('depdel', 'int'), ('txout', 'int'), ('selap', 'int'), ('dist', 'int'), ('label', 'int')]"
+
+#prueba de de ingeniería de características
+def test_stage4(tstage4):
+  assert type(tstage4[0]) == DF
+  assert tstage4[0].count() > 0
+  assert str(tstage4[0].dtypes) == "[('carrier', 'string'), ('wkday', 'int'), ('month', 'int'), ('morning', 'int'), ('wtyp', 'string'), ('wsev', 'string'), ('depdel', 'double'), ('txout', 'double'), ('selap', 'double'), ('dist', 'double'), ('label', 'int'), ('depdel_imputed', 'double'), ('txout_imputed', 'double'), ('selap_imputed', 'double'), ('dist_imputed', 'double'), ('carrier_stridx', 'double'), ('wkday_stridx', 'double'), ('month_stridx', 'double'), ('morning_stridx', 'double'), ('wtyp_stridx', 'double'), ('wsev_stridx', 'double'), ('carrier_onehot', 'vector'), ('wkday_onehot', 'vector'), ('month_onehot', 'vector'), ('morning_onehot', 'vector'), ('wtyp_onehot', 'vector'), ('wsev_onehot', 'vector'), ('features', 'vector'), ('scaled', 'vector')]"
+  assert type(tstage4[1]) == DF
+  assert tstage4[1].count() > 0
+  assert str(tstage4[1].dtypes).find('label') > 0

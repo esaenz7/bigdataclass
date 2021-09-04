@@ -7,8 +7,7 @@ Métodos:
   |--+crear_df
   |--+preprocesar_df
   |--+unir_df
-  |--+escribir_df
-  |--+leer_df
+  |--+feating
 '''
 
 #librerías
@@ -30,7 +29,7 @@ def crear_df(paths=[], formats=[], headers=[], samples_fr=[1.], rand_st=None, pr
           .option('header', header) \
           .option('inferSchema', True) \
           .load()
-        #obtención de muestra aleatoria
+        #obtención de muestra aleatoria sin reemplazo (por defecto 100%)
         dfs = dfi.sample(sample_fr, rand_st)
 
         #despliegue de resultados
@@ -80,12 +79,17 @@ def preprocesar_df(df_list, print_=True):
                     F.col('ACTUAL_ELAPSED_TIME').cast('int').alias('aelap'),
                     F.col('AIR_TIME').cast('int').alias('airtim'),
                     F.col('DISTANCE').cast('int').alias('dist'))\
-            .withColumn('dyofwk', F.dayofweek(F.col('date')).cast('int'))\
-            .withColumn('wkofyr', F.weekofyear(F.col('date')).cast('int'))\
+            .withColumn('daywk', F.dayofweek(F.col('date')).cast('int'))\
+            .withColumn('wkday', F.when(F.col('daywk')<5,1).otherwise(0))\
+            .withColumn('month', F.month(F.col('date')).cast('int'))\
             .withColumn('sdephr', F.expr('substring(sdeptim, 1, length(sdeptim)-2)').cast('int'))\
             .withColumn('sarrhr', F.expr('substring(sarrtim, 1, length(sarrtim)-2)').cast('int'))\
+            .withColumn('morning', F.when(F.col('sdephr')<12,1).otherwise(0))\
             .withColumn('label', F.when(F.col('arrdel')>0,1).otherwise(0))\
-            .drop('deptim', 'wofftim', 'wontim', 'txin', 'arrdel', 'arrtim', 'aelap', 'airtim')
+            .withColumn('carrier_cnt', F.count('carrier').over(W.Window.partitionBy('carrier')))\
+            .withColumn('carrier_rnk', F.dense_rank().over(W.Window.orderBy(F.desc('carrier_cnt'))))\
+            .withColumn('carrier', F.when(F.col('carrier_rnk')>9,'00').otherwise(F.col('carrier')))\
+            .drop('daywk','carrier_cnt','carrier_rnk','sdephr','sdeptim','deptim','wofftim','wontim','txin','arrdel','arrtim','sarrtim','sarrhr','aelap','airtim')
 
     #subconjunto de interés "airports"
     df_ar = df_list[1]\
@@ -104,10 +108,7 @@ def preprocesar_df(df_list, print_=True):
                     F.col('AirportCode').alias('icao'),
                     F.col('StartTime(UTC)'),
                     F.col('EndTime(UTC)'))\
-            .withColumn('evhr', F.hour(F.col('StartTime(UTC)')))\
-            .withColumn('evtim', ((F.unix_timestamp(F.col('EndTime(UTC)')) - 
-                                   F.unix_timestamp(F.col('StartTime(UTC)')))/60).cast('int'))\
-            .drop('StartTime(UTC)', 'EndTime(UTC)')
+            .drop('StartTime(UTC)','EndTime(UTC)')
 
     #despliegue de resultados
     if print_:
@@ -138,22 +139,19 @@ def unir_df(df_listready, print_=True):
     df_fl, df_ar, df_wt = df_listready
     #unión de subconjuntos "flights-airports-weather"
     #se realiza una unión tipo "left" para mantener todos los registros de vuelos aún cuando no hayan registros de eventos meteorológicos
+    #imputación y selección de variables
+    #se realiza la imputación de los campos nulos producto de la unión left
+    #se realiza la selección final de las variables de interés
     df_jn = df_ar\
             .join(df_fl, on=[df_ar['iata']==df_fl['orig']], how='inner')\
             .join(df_wt, on=[df_ar['icao']==df_wt['icao'],
                   df_fl['date']==df_wt['date']], how='left')\
-            .drop('iata','icao','icao','date','date')
-    #imputación y selección de variables
-    #se realiza la imputación de los campos nulos producto de la unión left
-    #se realiza la selección final de las variables de interés
-    df_jn = df_jn\
             .na.fill(value='Clear',subset=['wtyp'])\
             .na.fill(value='Calm',subset=['wsev'])\
-            .na.fill(value=0,subset=['evhr','evtim'])\
-            .na.fill(value=0,subset=['sdephr','sarrhr'])\
+            .drop('iata','icao','icao','date','date')\
             .na.drop(how='any')\
-            .select('carrier','sdephr','sarrhr','dyofwk','wkofyr','wtyp','wsev',
-                    'depdel','txout','selap','dist','evtim',
+            .select('carrier','wkday','month','morning','wtyp','wsev',
+                    'depdel','txout','selap','dist',
                     'label')
 
     #despliegue de resultados
@@ -170,6 +168,84 @@ def unir_df(df_listready, print_=True):
       dftarget = df_jn.groupBy('label').count()
       dftarget = dftarget.withColumn('%', F.round(dftarget['count']*100/df_jn.count(),2)).show()
     return df_jn
+  except Exception as e:
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
+
+#ingeniería de características
+'''
+Determinaciones:
++ las clases se encuentran defindas y con un balance aceptable (35/65 aprox.)
++ el conjunto de datos presenta variables tanto categóricas como numéricas
++ las escalas de los valores difieren entre algunas columnas
++ se realiza un proceso de imputación para las variables numéricas
++ se realiza un proceso de imputación para las variables categóricas
++ se realiza un proceso de indexación y codificación para las variables categóricas
++ se realiza un proceso de vectorización para las variables de interés
++ se realiza un proceso de estandarización
++ se realiza un proceso de extracción de columnas para almacenar en BD
+'''
+#función para aplicar técnicas de "feature engineering" 
+def feating(df, print_=True):
+  try:
+    sf1, sf2, ef = '\n\033[1m\033[103m\033[30m', '\n\033[1m\033[106m\033[30m', '\033[0m'
+    #análisis de variables numéricas y categóricas
+    numvar, catvar, missfill = ['depdel','txout','selap','dist'], ['carrier','wkday','month','morning','wtyp','wsev'], {}
+    imputer = Imputer(inputCols=numvar, outputCols=[var+'_imputed' for var in numvar])
+    for c in numvar: df = df.withColumn(c, df[c].cast('double'))
+    for var in catvar: missfill[var] = 'missing'
+    df = imputer.fit(df).transform(df).fillna(missfill)
+    #indexación y codificación de variables categóricas
+    stgstridx = [StringIndexer(inputCol=c, outputCol=c+'_stridx') for c in catvar]
+    stgonehot = [OneHotEncoder(inputCol=c+'_stridx', outputCol=c+'_onehot') for c in catvar]
+    catppl = pipe(stages=stgstridx+stgonehot)
+    dfenc = catppl.fit(df).transform(df)
+    #vectorización
+    cols = list(filter(lambda x: '_imputed' in x or '_onehot' in x, dfenc.columns))
+    vecassem = VectorAssembler(inputCols=cols, outputCol='features', handleInvalid='skip')
+    dfvec = vecassem.transform(dfenc)
+    #estandarización
+    stdscaler = StandardScaler(inputCol='features', outputCol='scaled', withStd=True, withMean=True)
+    dfstd = stdscaler.fit(dfvec).transform(dfvec)
+    #vector disperso a columnas
+    c = dfstd.select('carrier_onehot','wkday_onehot','month_onehot','morning_onehot','wtyp_onehot','wsev_onehot').limit(1).collect()
+    c = list(len(i.toArray()) for i in c[0])
+    veccols = ['depdel','txout','selap','dist'] +\
+              list('carrier_'+str(var+1) for var in range(c[0])) +\
+              list('wkday_'+str(var+1) for var in range(c[1])) +\
+              list('month_'+str(var+1) for var in range(c[2])) +\
+              list('morning_'+str(var+1) for var in range(c[3])) +\
+              list('wtyp_'+str(var+1) for var in range(c[4])) +\
+              list('wsev_'+str(var+1) for var in range(c[5])) +\
+              ['label']
+    dfcols = spark.createDataFrame(pd.DataFrame(np.array(list(np.append(s.toArray(), l) for s,l in dfstd.select('scaled','label').collect())), columns=veccols))
+
+    if print_:
+      plot_corr(df, inputcols=['wkday','month','morning','depdel','txout','selap','dist'])
+      print(sf1, 'Conjunto con variables procesadas', ef)
+      dfstd.select('scaled','label').show(10)
+      dfstd.printSchema()
+
+    # #minmax
+    # minmaxer = MinMaxScaler(inputCol='features', outputCol='minmaxed', min=0., max=1.)
+    # dfminmax = minmaxer.fit(dfvec).transform(dfvec)
+    # dfminmax = dfminmax.select(['minmaxed', 'label'])
+    # dfminmax.show(10, truncate=False)
+
+    # #normalización
+    # normalizer = Normalizer(inputCol='features', outputCol='normed', p=2.0)
+    # dfnormed = normalizer.transform(dfvec)
+    # dfnormed = dfnormed.select(['normed', 'label'])
+    # dfnormed.show(10, truncate=False)
+
+    # #reducción y selección de características mediante PCA
+    # k=50
+    # pca = PCA(k=k, inputCol='scaled', outputCol='pca')
+    # dfpca = pca.fit(dfstd).transform(dfstd)
+    # dfpca = dfpca.select(['pca','label'])
+    # dfpca.show(10, truncate=False)
+    # print('PCA, varianza explicada: ', pca.explainedVariance.toArray().sum(), ' = ', pca.explainedVariance.toArray())
+    return (dfstd, dfcols)
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)

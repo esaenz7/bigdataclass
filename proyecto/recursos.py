@@ -22,10 +22,12 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.mllib.evaluation import BinaryClassificationMetrics, MulticlassMetrics
 from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder
 from functools import reduce
+from difflib import SequenceMatcher as seqmatch
 import findspark
 # findspark.init('/usr/lib/python3.7/site-packages/pyspark')
 # !pip install -q handyspark
 # from handyspark import *
+sns.set(font_scale=1.5)
 
 #variables postgres
 # args = sys.argv
@@ -90,22 +92,22 @@ def leer_df(host=host, port=port, user=user, password=password, table='table'):
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función columnas-vector
-def cols2vec(dfin, inputcols=[], outputcol='features', label='label', lab_alias='label', print=False):
+def cols2vec(dfin, inputcols=[], outputcol='features', label='label', lab_alias='label', print_=False):
   try:
-    assy = VectorAssembler(inputCols=inputcols, outputCol=outputcol)
+    assy = VectorAssembler(inputCols=inputcols, outputCol=outputcol, handleInvalid='skip')
     dfout = assy.transform(dfin)
     if lab_alias:
       dfout = dfout.select([outputcol, F.col(label).alias(lab_alias)])
     else:
       dfout = dfout.select([outputcol])
-    if print: dfout.show(10, truncate=False)
+    if print_: dfout.show(10, truncate=False)
     return dfout
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
 
 #función vector-columnas
-def vec2cols(dfin, inputcol='features', outputcols=[], label='label', lab_alias='label', print=False, prediction=None):
+def vec2cols(dfin, inputcol='features', outputcols=[], label='label', lab_alias='label', print_=False, prediction=None):
   try:
     if lab_alias:
       if prediction:
@@ -117,71 +119,8 @@ def vec2cols(dfin, inputcol='features', outputcols=[], label='label', lab_alias=
     else:
       dfout = dfin.select(inputcol, label).withColumn('temp', mlF.vector_to_array(inputcol)) \
       .select([F.col('temp')[i].alias(outputcols[i]) for i in range(len(outputcols))])
-    if print: dfout.show(10, truncate=False)
+    if print_: dfout.show(10, truncate=False)
     return dfout
-  except Exception as e:
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
-
-#función para aplicar técnicas de "feature engineering" 
-def feating(df):
-  try:
-    #análisis de variables numéricas
-    numvar = ['depdel','txout','selap','dist','evtim']
-    for c in numvar:
-      df = df.withColumn(c, df[c].cast('double'))
-    numimp = [var + '_imputed' for var in numvar]
-    imputer = Imputer(inputCols=numvar, outputCols=numimp)
-    df = imputer.fit(df).transform(df)
-    #análisis de variables categóricas
-    catvar, missfill = ['carrier','sdephr','sarrhr','dyofwk','wkofyr','wtyp','wsev'], {}
-    for var in catvar:
-      missfill[var] = 'missing'
-    df = df.fillna(missfill)
-
-    #indexación y codificación de variables categóricas
-    stgstridx = [StringIndexer(inputCol=c, outputCol=c+'_stridx') for c in catvar]
-    stgonehot = [OneHotEncoder(inputCol=c+'_stridx', outputCol=c+'_onehot') for c in catvar]
-    ppl = pipe(stages=stgstridx+stgonehot)
-    df = ppl.fit(df).transform(df)
-    print('Conjunto con variables procesadas')
-    df.select(['depdel_imputed','txout_imputed','selap_imputed','dist_imputed','evtim_imputed',
-                'carrier_onehot','sdephr_onehot','sarrhr_onehot','dyofwk_onehot','wkofyr_onehot','wtyp_onehot','wsev_onehot','label'])\
-                .show(10, truncate=False)
-
-    #vectorización
-    dfvec = cols2vec(df, inputcols=['depdel_imputed','txout_imputed','selap_imputed','dist_imputed','evtim_imputed',
-                                    'carrier_onehot','sdephr_onehot','sarrhr_onehot','dyofwk_onehot','wkofyr_onehot',
-                                    'wtyp_onehot','wsev_onehot'],
-                    outputcol='features', label='label', lab_alias='label', print=False)
-
-    #estandarización
-    stdscaler = StandardScaler(inputCol='features', outputCol='scaled', withStd=True, withMean=True).fit(dfvec)
-    dfscaled = stdscaler.transform(dfvec)
-    dfscaled = dfscaled.select(['scaled', 'label'])
-    print('Conjunto con variables vectorizadas y estandarizadas')
-    dfscaled.show(10, truncate=False)
-
-    # #minmax
-    # minmaxer = MinMaxScaler(inputCol='features', outputCol='minmaxed', min=0., max=1.).fit(dfvec)
-    # dfminmax = minmaxer.transform(dfvec)
-    # dfminmax = dfminmax.select(['minmaxed', 'label'])
-    # dfminmax.show(10, truncate=False)
-
-    # #normalización
-    # normalizer = Normalizer(inputCol='features', outputCol='normed', p=2.0)
-    # dfnormed = normalizer.transform(dfvec)
-    # dfnormed = dfnormed.select(['normed', 'label'])
-    # dfnormed.show(10, truncate=False)
-
-    # #reducción y selección de características mediante PCA
-    # k=50
-    # pca = PCA(k=k, inputCol='scaled', outputCol='pca').fit(dfscaled)
-    # dfpca = pca.transform(dfscaled)
-    # dfpca = dfpca.select(['pca','label'])
-    # dfpca.show(10, truncate=False)
-    # print('PCA, varianza explicada: ', pca.explainedVariance.toArray().sum(), ' = ', pca.explainedVariance.toArray())
-    return dfscaled
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
@@ -189,15 +128,21 @@ def feating(df):
 #función de graficación de correlaciones
 def plot_corr(df=None, inputcols=[]):
   try:
-    dfcorr = cols2vec(df, inputcols=inputcols, outputcol='features')
-    dfcorr = StandardScaler(inputCol='features', outputCol='scaled', withStd=True, withMean=True).fit(dfcorr).transform(dfcorr).select(['scaled', 'label'])
-    print('Mapa de calor')
-    pearson_matrix = Correlation.corr(dfcorr, column='scaled', method='pearson').collect()[0][0]
-    sns.heatmap(pearson_matrix.toArray(), annot=True, fmt=".2f", cmap=sns.diverging_palette(255,10,as_cmap=True))
+    sns.set(font_scale=1.5)
+    dfvec = cols2vec(df, inputcols=inputcols, outputcol='features')
+    dfscaled = StandardScaler(inputCol='features', outputCol='scaled', withStd=True, withMean=True).fit(dfvec).transform(dfvec).select(['scaled', 'label'])
+    pearson_matrix = Correlation.corr(dfscaled, column='scaled', method='pearson').collect()[0][0]
+    dfcols = vec2cols(dfscaled, inputcol='scaled', outputcols=inputcols)
+    print('\nMapa de calor')
+    grid_kws = {"height_ratios":(1,.05), "hspace":.2}
+    f,(ax,cbar_ax) = plt.subplots(2, gridspec_kw=grid_kws, figsize=(24,8))
+    sns.heatmap(pearson_matrix.toArray(), yticklabels=inputcols, xticklabels=inputcols, mask=np.triu(pearson_matrix.toArray()),
+                annot=True, fmt=".2f", linewidths=.5, cmap=sns.diverging_palette(220,20,as_cmap=True), ax=ax, cbar_ax=cbar_ax, cbar_kws={"orientation": "horizontal"})
     plt.show()
-    print('Gráfico de parcela')
-    sns.pairplot(df.select(inputcols).toPandas(), height=2, aspect=16/9, corner=True)
+    print('\nGráfico de parcela')
+    sns.pairplot(dfcols.toPandas(), height=2, aspect=16/9, corner=True, hue='label')
     plt.show()
+    return dfscaled
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
@@ -205,6 +150,7 @@ def plot_corr(df=None, inputcols=[]):
 #función de graficación ROC
 def plot_metrics(dfcoll=None, ver=1, metric=None):
   try:
+    sns.set(font_scale=1.5)
     fpr, tpr, thresholds = roc_curve(np.asarray(list(i[1] for i in dfcoll)), np.asarray(list(i[4][1] for i in dfcoll)))
     roc_auc = auc(fpr, tpr)
     conf_mat = confusion_matrix(list(i[1] for i in dfcoll), list(i[5] for i in dfcoll))
