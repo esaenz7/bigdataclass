@@ -13,7 +13,7 @@ from preprocesamiento import *
 #definición de los parámetros (fixtures)
 #parámetro para prueba de carga de datos
 #['/src/datasources/flights.csv', '/src/datasources/airports.csv', '/src/datasources/weather.csv']
-df_list = crear_df(paths=['flights.csv', 'airports.csv', 'weather.csv'],
+df_list = crear_df(paths=['/src/datasources/flights.csv', '/src/datasources/airports.csv', '/src/datasources/weather.csv'],
           formats=['csv', 'csv', 'csv'], headers=[True, False, True], samples_fr=[.1, 1., .1], rand_st=999, print_=False)
 @pytest.fixture
 def tstage1():
