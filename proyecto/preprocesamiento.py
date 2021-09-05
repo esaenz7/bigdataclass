@@ -182,7 +182,7 @@ Determinaciones:
 + se realiza un proceso de imputación para las variables categóricas
 + se realiza un proceso de indexación y codificación para las variables categóricas
 + se realiza un proceso de vectorización para las variables de interés
-+ se realiza un proceso de estandarización
++ se realiza un proceso de estandarización (se opta por el StandardScaler)
 + se realiza un proceso de extracción de columnas para almacenar en BD
 '''
 #función para aplicar técnicas de "feature engineering" 
@@ -226,25 +226,18 @@ def feating(df, print_=True):
       dfstd.select('scaled','label').show(10)
       dfstd.printSchema()
 
-    # #minmax
+    # #minmax (opción)
     # minmaxer = MinMaxScaler(inputCol='features', outputCol='minmaxed', min=0., max=1.)
     # dfminmax = minmaxer.fit(dfvec).transform(dfvec)
     # dfminmax = dfminmax.select(['minmaxed', 'label'])
     # dfminmax.show(10, truncate=False)
 
-    # #normalización
+    # #normalización (opción)
     # normalizer = Normalizer(inputCol='features', outputCol='normed', p=2.0)
     # dfnormed = normalizer.transform(dfvec)
     # dfnormed = dfnormed.select(['normed', 'label'])
     # dfnormed.show(10, truncate=False)
 
-    # #reducción y selección de características mediante PCA
-    # k=50
-    # pca = PCA(k=k, inputCol='scaled', outputCol='pca')
-    # dfpca = pca.fit(dfstd).transform(dfstd)
-    # dfpca = dfpca.select(['pca','label'])
-    # dfpca.show(10, truncate=False)
-    # print('PCA, varianza explicada: ', pca.explainedVariance.toArray().sum(), ' = ', pca.explainedVariance.toArray())
     return (dfstd, dfcols)
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()

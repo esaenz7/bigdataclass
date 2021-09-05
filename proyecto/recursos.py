@@ -7,7 +7,7 @@ Descripción:
 
 #librerías
 from IPython.display import Javascript
-import sys, os, glob, datetime as dt, numpy as np, collections as coll
+import sys, os, glob, datetime as dt, numpy as np, random, collections as coll
 import pandas as pd, seaborn as sns, matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, classification_report, confusion_matrix
 from pyspark.sql import SparkSession, functions as F, window as W, DataFrame as DF
@@ -24,10 +24,9 @@ from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuil
 from functools import reduce
 from difflib import SequenceMatcher as seqmatch
 import findspark
-# findspark.init('/usr/lib/python3.7/site-packages/pyspark')
+findspark.init('/usr/lib/python3.7/site-packages/pyspark')
 # !pip install -q handyspark
 # from handyspark import *
-sns.set(font_scale=1.5)
 
 #variables postgres
 # args = sys.argv
@@ -150,7 +149,7 @@ def plot_corr(df=None, inputcols=[]):
 #función de graficación ROC
 def plot_metrics(dfcoll=None, ver=1, metric=None):
   try:
-    sns.set(font_scale=1.5)
+    sns.set(font_scale=1)
     fpr, tpr, thresholds = roc_curve(np.asarray(list(i[1] for i in dfcoll)), np.asarray(list(i[4][1] for i in dfcoll)))
     roc_auc = auc(fpr, tpr)
     conf_mat = confusion_matrix(list(i[1] for i in dfcoll), list(i[5] for i in dfcoll))
@@ -158,18 +157,31 @@ def plot_metrics(dfcoll=None, ver=1, metric=None):
       fig,ax = plt.subplots(1,2, figsize=(12,4))
       ax[0].plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
       ax[0].plot([0, 1], [0, 1], 'k--')
-      ax[0].set_xlim([0.0, 1.0]), ax[0].set_ylim([0.0, 1.05])
+      ax[0].set_xlim([-0.05, 1.0]), ax[0].set_ylim([0.0, 1.05])
       ax[0].set_xlabel('Falsos positivos'), ax[0].set_ylabel('Verdaderos positivos')
       ax[0].set_title('Curva ROC'), ax[0].legend(loc="lower right")
       sns.heatmap(conf_mat, annot=True, fmt='.0f', ax=ax[1])
       ax[1].set_title('Matriz de confusión')
       plt.show()
     else:
-      fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+      fig, axs = plt.subplots(1, 2, figsize=(12,4))
       metric.plot_roc_curve(ax=axs[0])
       metric.plot_pr_curve(ax=axs[1])
       plt.show()
     return (roc_auc, fpr, tpr, thresholds, conf_mat)
+  except Exception as e:
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)
+
+def plot_bound(trues, falses, n):
+  try:
+    fig,ax = plt.subplots(figsize=(12,4))
+    ax.scatter(list(range(n)), trues[:n], s=10, alpha=0.7, c='r', marker="o", label='1')
+    ax.scatter(list(range(n)), falses[:n], s=10, alpha=0.7, c='b', marker="s", label='0')
+    plt.axhline(.5, color='green')
+    plt.legend(loc='upper right'), ax.set_title('Límite de decisión')
+    ax.set_xlabel('Observaciones'), ax.set_ylabel('Predicción de probabilidad')
+    plt.show()
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print(exc_type, os.path.split(exc_tb.tb_frame.f_code.co_filename)[1], exc_tb.tb_lineno, exc_obj)

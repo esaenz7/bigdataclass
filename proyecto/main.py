@@ -28,6 +28,6 @@ for df,table in zip(df_listready, ['tb_flights','tb_airports','tb_weather']):
 if escribir_df(df_jn, table='tb_proyecto'): print('Operación exitosa.')
 if escribir_df(df_ft[1], table='tb_proyectoml'): print('Operación exitosa.')
 print('Leer desde base de datos')
-df_db = leer_df(table='tb_proyecto')
+df_db = leer_df(table='tb_proyectoml')
 df_db.show(10, truncate=False)
 df_db.printSchema()
