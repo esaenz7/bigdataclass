@@ -18,9 +18,12 @@
 
     c) **run_image.sh**. Este script creará 2 contenedores y una red local en docker de la siguiente forma:
 
-        * Red: bigdatanet, IP: 10.7.84.0/24.
-        * Host principal (sesión bash donde se ejecutarán los comandos): bigdata_proyecto_esv_1, IP: 10.7.84.101.
-        * Host secundario (base de datos): bigdata_proyecto_esv_2 (postgres),  IP: 10.7.84.102.
+        * Red:
+            bigdatanet, IP: 10.7.84.0/24 (subnet).
+        * Host principal (repositorio de archivos y sesión bash donde se ejecutarán los comandos):
+            bigdata_proyecto_esv_1, IP: 10.7.84.101.
+        * Host secundario (base de datos):
+            bigdata_proyecto_esv_2 (postgres), IP: 10.7.84.102.
 
     d) Estos parámetros corresponden a la instancia de postgres dentro del ambiente de docker:
 
@@ -37,18 +40,17 @@
 
     Este comando ejecutará las siguientes instrucciones:
 
-    1. Un query psql (*create_tables.sql*) para crear las tablas necesarias en la base de datos postgres y un query psql (*read_tables.sql*) para leer las tablas creadas a manera de confirmación.
+    1. Un query psql (*create_tables.sql*) para crear las tablas necesarias en la base de datos postgres y un query psql (*read_tables.sql*) para leer las tablas creadas a modo de confirmación.
 
     2. Seguidamente ejecutará el programa principal (*main.py*) el cual realizará las siguientes tareas:
 
-        a) Crear los conjuntos de datos a partir de los archivos fuentes (*/datasources/\*.csv*)
+        a) Crear los conjuntos de datos a partir de los archivos fuentes (*/datasources/\*.csv*).
 
-        b) Preprocesar los conjuntos de datos individuales.
+        b) Pre-procesar los conjuntos de datos individuales.
 
         c) Unir los conjuntos de datos en un dataframe principal.
 
-        d) Aplicar ingeniería de características al conjunto de 
-        datos principal para el proceso de ml ("machine learning").
+        d) Aplicar ingeniería de características al conjunto de datos principal para el proceso de ml ("machine learning").
 
         e) Realizar la operaciones de escritura en base de datos.
 
@@ -60,7 +62,7 @@
 
     Este comando cargará el servidor de Jupyter para accesar al directorio en donde se encuentra el notebook con la segunda parte del proyecto (carga desde BD, entrenamiento, pruebas, evaluación y análisis de resultados).
 
-    El notebook "BIGDATA_07_2021_ProyectoFinal_ESV.ipynb" almacena los recursos, el código, la documentación y los resultados solicitados. Se ejecuta de forma completa y secuencial. Adicional se incluyen copias en formatos HTML y PDF.
+    El notebook **"BIGDATA_07_2021_ProyectoFinal_ESV.ipynb"** almacena los recursos, el código, la documentación y los resultados solicitados. Se ejecuta de forma completa y secuencial. Adicional se incluyen copias en formatos HTML y PDF.
 
     b) Luego de cerrar la sesión del servidor de Jupyter se puede ejecutar el siguiente comando desde la misma sesión BASH del contenedor principal.
 
@@ -74,9 +76,13 @@
 
 * El repositorio completo de la tarea se encuentra también en el siguiente enlace [github/esaenz7](https://github.com/esaenz7/bigdataclass/tree/main/proyecto).
 
-* Arquitectura en Docker: <div><img src="https://drive.google.com/uc?export=view&id=19NPwcsU1IRkmmFrfQpAOYD9SpzrME9II" width="700"/></div>
+* Arquitectura en Docker:
 
-* Base de datos Postgres: <div><img src="https://drive.google.com/uc?export=view&id=1NZtyUlptLmQ5X8vzGip9cOm__UevjKep" width="700"/></div>
+    <div><img src="https://drive.google.com/uc?export=view&id=19NPwcsU1IRkmmFrfQpAOYD9SpzrME9II" width="600"/></div>
+
+* Base de datos Postgres:
+
+    <div><img src="https://drive.google.com/uc?export=view&id=1NZtyUlptLmQ5X8vzGip9cOm__UevjKep" width="400"/></div>
 
   * Las tablas tb_flights, tb_airports y tb_weather corresponden a los conjuntos de datos individuales. La tabla tb_proyecto continene los 3 conjuntos de datos ensamblados previo al pre-procesamiento.
 
