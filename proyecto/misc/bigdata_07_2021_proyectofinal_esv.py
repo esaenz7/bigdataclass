@@ -169,23 +169,51 @@ desarrollo correcto de modelos (vistos en el módulo de aprendizaje) aplicarán 
 
 ## Estrategia del proyecto
 
+* Ambiente de ejeución
+
+  * Contenerización con Docker
+  
+  <div><img src="https://drive.google.com/uc?export=view&id=19NPwcsU1IRkmmFrfQpAOYD9SpzrME9II" width="700"/></div>
+
+* Proceso de machine learning (ciclo de vida)
+
 <div><img src="https://drive.google.com/uc?export=view&id=1YBLbLdBaPid5y9XXWNDMm2msuA4wKWAu" width="700"/></div>
 
 * Preparación de los datos e ingeniería de características
 
+  * Técnicas de análisis y selección de variables de interés, imputación de valores nulos, indexación y codificación de colummnas categóricas, además de estandarización de los datos y almacenamiento en base de datos.
+
+  * Base de datos
+
+    Postgres <div><img src="https://drive.google.com/uc?export=view&id=1NZtyUlptLmQ5X8vzGip9cOm__UevjKep" width="700"/></div>
+    
+    Las tablas tb_flights, tb_airports y tb_weather corresponden a los conjuntos de datos individuales. La tabla tb_proyecto continene los 3 conjuntos de datos ensamblados previo al pre-procesamiento.
+    
+    La tabla tb_proyectoml corresponden al conjunto de datos preparado después del proceso de ingeniería de características.
+
+    Las tablas tb_modelolr y tb_modelorf contienen las etiquetas, predicciones y probabilidades, resultado de la evaluación de cada modelo con el conjunto de prueba.
+
 * Partición de los datos
+
+  * Separación training-test con una relación 70/30.
 
 * Modelos
 
   * Regresión logística
 
+    Es un modelo de aprendizaje que crea una superficie de decisión lineal realizando suposiciones de probabilidad y alterando los pesos mediante un enfoque de máxima verosimilitud.
+
   <div><img src="https://drive.google.com/uc?export=view&id=1UB50E6q5fe8ZnRbQsAauF5U2PxXrtGmX" width="700"/></div>
 
   * Bosques aleatorios
 
+    Es una combinación de árboles de decición tal que cada árbol depende de los valores de un vector aleatorio probado independientemente y con la misma distribución para cada uno de estos. Es una modificación sustancial de bagging que construye una larga colección de árboles no correlacionados y luego los promedia.
+
   <div><img src="https://drive.google.com/uc?export=view&id=1yplZYKLAzMCKlKgUntkzMIhApm3MdhRS" width="700"/></div>
 
 * Entrenamiento
+
+  * Técnica de validación cruzada mediante K-Fold, con utilización de grillas paramétricas y evaluación del mejor modelo mediante métricas de AUC.
 
 * Evaluación de los modelos de aprendizaje
 
@@ -938,6 +966,7 @@ lr_estimador = pipe(stages=[pca_mod,lr_mod])
 lr_grid = ParamGridBuilder()\
                             .addGrid(pca_mod.k, [10, 25, len(df_ft[1].columns[:-1])])\
                             .addGrid(lr_mod.maxIter, [5, 15, 25])\
+                            .addGrid(lr_mod.threshold, [.5, .6])\
                             .build()
 lr_evaluator = BinaryClassificationEvaluator(metricName='areaUnderROC')
 lr_cv = CrossValidator(estimator=lr_estimador, estimatorParamMaps=lr_grid, evaluator=lr_evaluator, numFolds=5)
@@ -949,7 +978,8 @@ rf_mod = RandomForestClassifier(featuresCol='pca', labelCol='label')
 rf_estimador = pipe(stages=[pca_mod,rf_mod])
 rf_grid = ParamGridBuilder()\
                             .addGrid(pca_mod.k, [10, 25, len(df_ft[1].columns[:-1])])\
-                            .addGrid(rf_mod.numTrees, [10, 25, 50])\
+                            .addGrid(rf_mod.numTrees, [25, 50])\
+                            .addGrid(rf_mod.impurity, ['entropy', 'gini'])\
                             .build()
 rf_evaluator = BinaryClassificationEvaluator(metricName='areaUnderROC')
 rf_cv = CrossValidator(estimator=rf_estimador, estimatorParamMaps=rf_grid, evaluator=rf_evaluator, numFolds=5)
@@ -1026,7 +1056,7 @@ plot_bound(np.array(list(i[4][1] for i in rf_predic if i[1]==1)),
 #   #lectura desde base de datos
 #   dfout = leer_df(table=tb)
 #   print('Modelo: ', mod, '\tTabla: ', tb, sep='')
-#   dfout.show(truncate=False)
+#   dfout.show(5, truncate=False)
 #   dfout.printSchema()
 
 """---
@@ -1056,15 +1086,37 @@ plot_bound(np.array(list(i[4][1] for i in rf_predic if i[1]==1)),
 
   * Esta evaluación contempla el análisis tanto del **ROC** el cual muestra la compensación entre la tasa de verdaderos positivos y la tasa de falsos positivos, como del **Precision-Recall** que analiza la compensación entre la tasa positiva verdadera y el valor predictivo positivo; ambos utilizando diferentes umbrales de probabilidad para cada modelo.
 
-  * Dado que las clases en el conjunto de datos están aceptablemente balanceadas se prefiere el uso del ROC para efectos de decidir cuál de los 2 modelos aporta mejor pronóstico probabilístico. En este caso el modelo de Regresión logística brinda un mejor pronóstico con un resultado del ___%, el cual está por encima del modelo de Bosques aleatorios que alcanza un ___%. Incluso logrando realizar el entrenamiento en un menor tiempo, por lo que su rendimiento final es mejor en comparación con el modelo de RF.
+  * Dado que las clases en el conjunto de datos están aceptablemente balanceadas se prefiere el uso del **ROC** para efectos de decidir cuál de los 2 modelos aporta mejor pronóstico probabilístico. En este caso el modelo de Regresión logística brinda un mejor pronóstico con un resultado del ___%, el cual está por encima del modelo de Bosques aleatorios que alcanza un ___%. Incluso logrando realizar el entrenamiento en un menor tiempo, por lo que su rendimiento final es mejor en comparación con el modelo de RF.
 
-  * La curva ROC y la matriz de confusión también permiten apreciar visual y cuantitativamente la cantidad de aciertos que cada modelo alcanzó según la clase objetivo.
+  * Se considera que el modelo de Regresión logística al ser un modelo más simple que crea una superficie de decisión lineal realizando suposiciones de probabilidad y alterando los pesos mediante un enfoque de máxima verosimilitud, permite alcanzar mejores resultados para las características particulares del conjunto de datos y del problema planteado. Mientras que el modelo de Bosques aleatorios parece estar realizando un sobreajuste que provoca una alta taza de falsos negativos.
 
-  * Finalmente se muestra un gráfico de dispersión con la probabilidad predicha para n observaciones versus su valor real identificado por medio de una codificación de colores y el límite de decisión aplicado, esto para cada modelo.
+  * La curva ROC y la matriz de confusión también permiten apreciar visual y cuantitativamente la habilidad de predicción de cada modelo según la clase objetivo.
+
+  * Finalmente se muestra un gráfico de dispersión con la probabilidad predicha para **n** cantidad observaciones versus su valor real identificado por medio de una codificación de colores y el límite de decisión aplicado, esto para cada modelo.
 
   * El proceso y los resultados se condideran satisfactorios.
 
   * Este trabajo permite mostrar de forma general la ruta que sigue un científico de datos desde la carga inicial de datos, hasta las etapas finales de predicción-evaluación y demuestra como la gran mayoría de los esfuerzos y recursos se centran en la fase de preprocesamiento. Como se dice usualmente, si se alimenta basura se obtendrá basura, de modo tal que los mejores modelos, configurados con los mejores parámetros, obtendrán terribles resultados si se alimentan de forma incorrecta.
+
+### Algunas conclusiones acerca del proyecto
+
+  * Recordar que spark se basa en una ejecución "lazy". Prestar especial atención cuando se trabaja con operaciones desde y hacia bases de datos.
+
+  * Mantener el código ordenado y compacto. Utilizar librerías globales y funciones puras que permitan separar y controlar la ejecución por etapas o procesos.
+
+  * Documentar todo, ya sea a nivel de código o de formatos como markdown.
+
+  * Aprovechar las herramientas de control de cambios y contenerización de ambientes, como GitHub y Docker.
+
+  * Evitar el uso de acciones de pyspark innecesarias o recurrentes como "show" y "count" que ralentizan la ejecución del código.
+
+  * Trabajar con muestras de datos pequeñas para realizar pruebas, pero no olvidar de ejecutar el conjunto completo.
+
+  * Evaluar los modelos de aprendizaje con diferentes parámetros para lograr el mejor rendimiento es importante, pero antes es primordial preparar el conjunto de datos adecuadamente mediante técnicas de ingeniería de características.
+
+  * Las pruebas unitarias deben ser consecuentes con el alcance y los límites del código.
+
+  * Aprovechar la documentación oficial de los desarrolladores de las librerías.
 
 ---
 
