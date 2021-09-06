@@ -74,4 +74,14 @@
 
 * El repositorio completo de la tarea se encuentra también en el siguiente enlace [github/esaenz7](https://github.com/esaenz7/bigdataclass/tree/main/proyecto).
 
+* Arquitectura en Docker: <div><img src="https://drive.google.com/uc?export=view&id=19NPwcsU1IRkmmFrfQpAOYD9SpzrME9II" width="700"/></div>
+
+* Base de datos Postgres: <div><img src="https://drive.google.com/uc?export=view&id=1NZtyUlptLmQ5X8vzGip9cOm__UevjKep" width="700"/></div>
+
+  * Las tablas tb_flights, tb_airports y tb_weather corresponden a los conjuntos de datos individuales. La tabla tb_proyecto continene los 3 conjuntos de datos ensamblados previo al pre-procesamiento.
+
+  * La tabla tb_proyectoml corresponden al conjunto de datos preparado después del proceso de ingeniería de características.
+
+  * Las tablas tb_modelolr y tb_modelorf contienen las etiquetas, predicciones y probabilidades, resultado de la evaluación de cada modelo con el conjunto de prueba.
+
 ---
