@@ -21,17 +21,6 @@ RUN pip3 install pyspark
 RUN pip3 install pytest
 RUN pip3 install notebook
 RUN pip3 install findspark
-
-RUN apk add libxslt-dev
-RUN pip3 install pytest-sugar
-RUN pip3 install gdown
-RUN pip3 install jupyter_contrib_nbextensions
-RUN pip3 install jupyter_nbextensions_configurator
-RUN jupyter contrib nbextension install --user
-RUN jupyter nbextensions_configurator enable --user
-#RUN pip3 install scipy
-#RUN pip3 install scikit-learn
-
 RUN ln /usr/bin/python3.7 /usr/bin/python
 
 WORKDIR /src
