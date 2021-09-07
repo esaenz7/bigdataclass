@@ -33,6 +33,7 @@ RUN pip3 install jupyter_nbextensions_configurator
 RUN pip3 install jupyterthemes
 RUN pip3 install --upgrade jupyterthemes
 RUN pip3 install RISE
+RUN pip3 install colabcode
 
 RUN jupyter contrib nbextension install --user
 RUN jupyter nbextensions_configurator enable --user
