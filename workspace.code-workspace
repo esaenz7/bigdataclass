@@ -6,6 +6,18 @@
 	],
 	"settings": {
 		"editor.fontSize": 12,
-		"terminal.integrated.fontSize": 12
+		"terminal.integrated.fontSize": 12,
+		"sqltools.connections": [
+			{
+				"previewLimit": 50,
+				"server": "10.7.84.102",
+				"port": 5432,
+				"driver": "PostgreSQL",
+				"name": "docker bigdatanet .102",
+				"username": "postgres",
+				"password": "testPassword",
+				"database": "postgres"
+			}
+		]
 	}
 }
